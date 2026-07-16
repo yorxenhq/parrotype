@@ -205,6 +205,23 @@ class TrayApp(QObject):
         if len(audio) < MIN_RECORDING_S * self.config.sample_rate:
             self.overlay.hide_pill()
             return
+        import numpy as np
+
+        rms = float(np.sqrt(np.mean(np.square(audio))))
+        peak = float(np.max(np.abs(audio)))
+        log.info(
+            "Captured %.1fs from device %s (rms=%.6f peak=%.6f)",
+            len(audio) / self.config.sample_rate,
+            self.config.input_device if self.config.input_device is not None else "default",
+            rms,
+            peak,
+        )
+        if peak < 1e-3 and rms < 1e-4:
+            # Digital silence: OS/driver mute or dead device — not a "success".
+            self.overlay.show_error(
+                "микрофон молчит (уровень ~0) — проверь mute (F9) и устройство в настройках"
+            )
+            return
         self.overlay.show_transcribing()
         self._busy = True
         audio_seconds = len(audio) / self.config.sample_rate
@@ -239,7 +256,7 @@ class TrayApp(QObject):
                 if self.settings_dialog and self.settings_dialog.isVisible():
                     self.settings_dialog.refresh_history()
         else:
-            self.overlay.show_inserted("(пусто)")
+            self.overlay.show_error("речь не распознана — в записи не нашлось слов")
 
     def _on_failed(self, message: str) -> None:
         self._busy = False
