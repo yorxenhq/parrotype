@@ -212,8 +212,8 @@ class InjectionAborted(RuntimeError):
 
 def type_text(
     text: str,
-    chunk_chars: int = 8,
-    chunk_delay_s: float = 0.008,
+    chunk_chars: int = 200,
+    chunk_delay_s: float = 0.0,
     abort_check: Callable[[], bool] | None = None,
 ) -> None:
     """Type `text` into the focused window via SendInput KEYEVENTF_UNICODE.
