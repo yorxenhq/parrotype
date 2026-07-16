@@ -1,146 +1,108 @@
-# Parrotype
+<p align="center">
+  <img src="assets/logo.svg" width="88" alt="Parrotype">
+</p>
 
-**You talk. The parrot types.**
+<h1 align="center">Parrotype</h1>
 
-Local voice dictation for Windows: press a hotkey, speak, release — your
-words are typed into whatever window you're in.
+<p align="center"><em>You talk. The parrot types.</em></p>
 
-**Everything runs on your machine — your voice never leaves it.**
-No cloud, no account, no telemetry; the Whisper model runs locally.
+<p align="center">Voice dictation for Windows that runs entirely on your machine. Free, no account, no cloud.</p>
 
-Status: **1.0.0** — core + polished tray app + first-run
-wizard + CLI, reliability package, RU/EN UI, PyInstaller build + Inno
-Setup script. Live-microphone flows and the installed build still need a
-human pass (see [What still needs a human check](#what-still-needs-a-human-check)).
+<p align="center">
+  <a href="https://github.com/yorxenhq/parrotype/releases/latest"><img src="https://img.shields.io/github/v/release/yorxenhq/parrotype?color=4FD1B0" alt="latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/yorxenhq/parrotype?color=2E2E36" alt="license: MIT"></a>
+  <img src="https://img.shields.io/badge/platform-Windows-2E2E36" alt="platform: Windows">
+  <a href="https://github.com/yorxenhq/parrotype/releases"><img src="https://img.shields.io/github/downloads/yorxenhq/parrotype/total?color=4FD1B0" alt="downloads"></a>
+</p>
+
+<p align="center">
+  <img src="design/preview/pill-states.png" width="720" alt="The overlay pill: listening with a live waveform, transcribing, model download, inserted text, error state">
+</p>
+
+Hold a hotkey, say what you want, release — the text lands in whatever window you're in. That's the whole app.
+
+## Why Parrotype
+
+- **Private by construction.** Recognition runs on your machine, on a local Whisper model. Your voice and your text go nowhere — not even to us.
+- **Fast.** A 13-second phrase transcribes in about 0.8 s on a laptop GPU, a couple of seconds on CPU ([measured](scripts/benchmark.py)).
+- **14 languages that actually work.** Each one passed a measured recognition gate before it made the menu. Auto-detect handles the rest.
+- **Knows your words.** A replacement dictionary teaches it your terms — "kubernetes", product names, people. Say it once, it's typed right.
+- **Doesn't eat your clipboard.** Text is pasted into the active window, then whatever you had copied comes back.
+- **Free. Actually free.** MIT license, no trial, no pro tier. It stays that way.
+
+## Install
+
+1. Download [ParrotypeSetup.exe](https://github.com/yorxenhq/parrotype/releases/latest/download/ParrotypeSetup.exe) from the [latest release](https://github.com/yorxenhq/parrotype/releases/latest).
+2. Run it. Windows SmartScreen will warn about an unknown publisher — the installer isn't code-signed yet. "More info" → "Run anyway", or build from source below if you'd rather trust the code than us.
+3. First run opens a three-step wizard: pick a language, pick a model (it downloads on the spot, ~75 MB to ~3 GB depending on the model), try the hotkey.
+
+Then hold `Ctrl+Alt` anywhere and speak. `Ctrl+Shift+Space` toggles hands-free mode.
 
 ## Languages
 
-**Optimized for English, Russian, Spanish, German, French, Italian,
-Portuguese, Polish, Ukrainian, Dutch, Turkish, Japanese, Korean and
-Chinese** — each passed a measured recognition-quality gate on the
-production engine (>= 80% content-keyword recall; methodology and per-
-language results: `scripts/lang_gate.py`, `design/preview/lang-gate.md`).
-Auto-detect covers the 90+ languages of the underlying Whisper model —
-that part is a property of Whisper, not a Parrotype guarantee.
-UI languages: Russian + English (follows the system, switchable).
+English, Russian, Spanish, German, French, Italian, Portuguese, Polish, Ukrainian, Dutch, Turkish, Japanese, Korean, Chinese — each passed a measured recognition-quality gate on the production engine ([per-language results](design/preview/lang-gate.md)). Auto-detect covers the 90+ languages Whisper knows; that part is Whisper's promise, not ours.
 
-## What's implemented (v1)
+UI languages: English and Russian, follows your system.
 
-- **`core/`** — UI-independent engine: audio capture (sounddevice, 16 kHz
-  mono) -> Silero VAD -> faster-whisper STT -> replacement dictionary
-  post-filter. Importable as a library; CUDA with automatic CPU fallback.
-- **`shells/tray/`** — PySide6 tray app:
-  - global hotkeys: push-to-talk (hold `ctrl+alt`) and toggle
-    (`ctrl+shift+space`), via an in-repo WH_KEYBOARD_LL hook
-  - status overlay pill (bottom-center, never steals focus, click-through):
-    live waveform + mono timer while listening, spinner while transcribing,
-    flash-and-fade confirmation with text preview, persistent error state
-    (click opens the log); Esc cancels a recording
-  - paste into the active window: clipboard + Ctrl+V, previous clipboard
-    text restored
-  - tray menu: status/model, copy last dictation, pause, settings, history
-  - settings window (sidebar): hotkeys / language (auto + 14 languages) / microphone /
-    autostart / sound ticks · model + device + **latency test** · replacement
-    dictionary ("клод" -> "Claude") · local history (last 50, can be
-    disabled) · about
-- **`shells/cli/`** — `python -m shells.cli audio.wav` or `--mic --seconds 10`
-  -> text to stdout.
-- Languages: auto-detect + the 14 gate-passed languages listed above. All
-  processing local; history and config live in `%APPDATA%\Parrotype`.
+## Privacy
 
-Not in v1 (by spec): installer + first-run wizard (v1.5), HTTP microservice
-shell (reserved), TTS direction (interface reserved), cloud anything (never).
+Everything happens on this computer. Your voice and your text go nowhere — not even to us.
 
-## Run
+The app touches the network for exactly two things: downloading the Whisper model on first run, and an optional weekly check for a new version, which you can switch off in settings. The dictation core contains no network code at all — clone the repo and see for yourself:
+
+```
+grep -rniE "http|socket|urllib|requests" core/
+```
+
+Nothing comes back.
+
+## Support
+
+Parrotype is free and stays free. If it saves you time, you can [buy Eugene a coffee](https://ko-fi.com/eugene_vovk) — it keeps the parrot fed.
+
+---
+
+<details>
+<summary><b>Build from source</b></summary>
 
 ```powershell
 git clone https://github.com/yorxenhq/parrotype && cd parrotype
 python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
-# optional, GPU (NVIDIA, CUDA 12): .venv\Scripts\pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
-.venv\Scripts\python -m shells.tray      # tray app
-.venv\Scripts\python -m shells.cli tests\data\test_en.wav --verbose   # CLI
+.venv\Scripts\python -m shells.tray                              # tray app
+.venv\Scripts\python -m shells.cli tests\data\test_en.wav        # or just transcribe a file
 ```
 
-First transcription downloads the model (~75 MB tiny … ~3 GB large-v3);
-the pill and the first-run wizard show download progress.
+GPU (NVIDIA, CUDA 12): `.venv\Scripts\pip install nvidia-cublas-cu12 nvidia-cudnn-cu12`. The packaged installer is CPU-only to keep the bundle sane; GPU users run from source.
 
-## Packaged build (v1.5)
+Build the installer yourself:
 
 ```powershell
 .venv\Scripts\python -m PyInstaller packaging\parrotype.spec --noconfirm   # -> dist\Parrotype\
-# installer (requires Inno Setup 6): ISCC.exe packaging\installer.iss     # -> dist\ParrotypeSetup.exe
+ISCC.exe packaging\installer.iss                                           # -> dist\ParrotypeSetup.exe (Inno Setup 6)
 ```
 
-The packaged build is CPU-only (NVIDIA CUDA runtimes are excluded to keep
-the bundle sane); GPU users run from source. Model weights download on
-first run through the wizard.
+</details>
 
-## Latency (measured)
+<details>
+<summary><b>Run tests</b></summary>
 
-Reference machine: RTX 4050 Laptop 6GB, 32GB RAM, Python 3.13.
-Warm-run transcription time for a 13.5s English WAV with the production
-decode parameters — anti-hallucination temperature cascade + tuned VAD
-(see `scripts/benchmark.py`; first pass per model excluded as warm-up):
-
-| Model | CPU int8 | GPU float16 |
-|---|---|---|
-| tiny | 0.50s | 0.25s |
-| base | 0.84s | 0.30s |
-| small | 2.44s | 0.48s |
-| medium | 6.81s | 0.94s |
-| large-v3-turbo | — | 0.78s |
-| large-v3 | — | 6.53s* |
-
-\* large-v3 on this 6GB GPU triggers the fallback decode cascade and is
-much slower under the production parameters than in a bare greedy run.
-
-**Default:** `large-v3-turbo` when CUDA is available (best quality per
-second, 0.78s), `small` on CPU-only machines. Pick differently in
-Settings -> Модель -> Тест латентности.
-
-## Testing
-
-Machine-verified (`pytest tests`, `scripts/selftest_*.py`):
-
-- 42 unit/integration tests: config, history, post-filter dictionary,
-  reliability guards, recognition quality, and end-to-end STT on synthesized
-  English speech (keywords + dictionary replacement verified on real model
-  output)
-- tray app boots headless: tray icon, menu, all overlay states, focus and
-  click-through flags (18 checks)
-- global hotkey plumbing with injected input through the real OS hook:
-  PTT press/release, toggle, Esc-cancel, pause gate (8 checks)
-- paste path against a live Notepad: text lands in the window, clipboard
-  restored (verified via WM_GETTEXT, retry-hardened against focus stealing)
-- dependency license audit — see `LICENSES.md`
-
-### What still needs a human check
-
-- dictation from a **real microphone** (test audio was synthesized TTS)
-- **Russian and mixed RU+EN speech quality** — the build machine had no
-  Russian TTS voice, so only English was machine-tested end-to-end
-- hotkeys while a fullscreen/elevated app is focused (browser, VS Code,
-  Telegram were not human-verified)
-- subjective latency feel and overlay legibility on multi-monitor setups
-- autostart registry entry across a real reboot
-
-## Repo map
-
-```
-core/          engine, audio capture, config, history, post-filter
-shells/tray/   PySide6 app: overlay, tray, settings, hotkeys, paste
-shells/cli/    stdout transcription
-assets/        logo.svg + logo-small.svg + appicon.svg (canonical "bar-parrot"
-               mark: full / no-eye tray variant / plaque icon), generated
-               app.ico + png, test WAV
-scripts/       benchmark + self-tests (tray / hotkey / paste) + TTS fixtures
-tests/         pytest suite
-DECISIONS.md   non-obvious calls made during the build
-LICENSES.md    dependency license audit
+```powershell
+.venv\Scripts\pip install -r requirements-dev.txt
+.venv\Scripts\python -m pytest tests
 ```
 
-License: MIT (dependencies audited in `LICENSES.md`).
+63 unit and integration tests: config, history, dictionary post-filter, update check, reliability guards, and end-to-end STT on real model output. Beyond pytest, `scripts/selftest_*.py` boot the actual tray app headless, drive the real Windows keyboard hook with injected input, and paste into a live Notepad.
 
-## Support
+</details>
 
-Parrotype is free and stays free. If it saves you time, you can [buy me a coffee](https://ko-fi.com/eugene_vovk) — it keeps the parrot fed.
+<details>
+<summary><b>Tech notes</b></summary>
+
+- Engine: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) + Silero VAD, 16 kHz mono capture via sounddevice. CUDA when available, automatic CPU fallback.
+- UI: PySide6 tray app. The overlay pill never steals focus and is click-through; Esc cancels a recording.
+- Default model: `large-v3-turbo` on GPU (0.78 s for a 13.5 s phrase on an RTX 4050 laptop), `small` on CPU. Settings has a built-in latency test — measure on your own machine and pick.
+- Config and history live in `%APPDATA%\Parrotype`. History is local, capped at the last 50 dictations, and can be turned off.
+- Repo map: `core/` — the engine, importable as a library; `shells/tray/` — the app; `shells/cli/` — stdout transcription; `packaging/` — PyInstaller spec + Inno Setup script. Non-obvious calls are written down in [DECISIONS.md](DECISIONS.md).
+- License: MIT. Dependency licenses audited in [LICENSES.md](LICENSES.md).
+
+</details>
