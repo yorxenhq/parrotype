@@ -80,7 +80,10 @@ def main() -> int:
 
     def step_hide() -> None:
         overlay.hide_pill()
-        check("overlay hidden", not overlay.isVisible())
+
+    def step_hide_check() -> None:
+        # hide is animated (fade+slide ~150ms); check after it completes
+        check("overlay hidden after fade-out", not overlay.isVisible())
 
     def step_settings_mute() -> None:
         check("hotkeys active before settings", not tray_app.hotkeys.paused)
@@ -104,8 +107,9 @@ def main() -> int:
     QTimer.singleShot(1800, step_inserted)
     QTimer.singleShot(3200, step_error)
     QTimer.singleShot(3800, step_hide)
-    QTimer.singleShot(4200, step_settings_mute)
-    QTimer.singleShot(5200, finish)
+    QTimer.singleShot(4400, step_hide_check)
+    QTimer.singleShot(4600, step_settings_mute)
+    QTimer.singleShot(5600, finish)
 
     app.exec()
 

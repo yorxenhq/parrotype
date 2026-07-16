@@ -18,15 +18,79 @@ log = logging.getLogger(__name__)
 LevelCallback = Callable[[float], None]
 
 
-def list_input_devices() -> list[tuple[int, str]]:
+VIRTUAL_DEVICE_MARKERS = (
+    "virtual", "steam streaming", "sound mapper", "voice changer",
+    "cable", "vb-audio", "voicemeeter", "stereo mix",
+)
+
+
+def is_virtual_device(name: str) -> bool:
+    """Heuristic: virtual/loopback endpoints that must not be a dictation mic."""
+    lowered = name.lower()
+    return any(marker in lowered for marker in VIRTUAL_DEVICE_MARKERS)
+
+
+def list_input_devices(skip_virtual: bool = False) -> list[tuple[int, str]]:
     """(index, name) of all input-capable devices."""
     import sounddevice as sd
 
     devices = []
     for idx, dev in enumerate(sd.query_devices()):
         if dev.get("max_input_channels", 0) > 0:
+            if skip_virtual and is_virtual_device(dev["name"]):
+                continue
             devices.append((idx, dev["name"]))
     return devices
+
+
+def pick_input_device(preferred: int | None = None) -> int | None:
+    """Resolve the capture device for dictation.
+
+    Order: user's explicit choice (verified to still exist) -> the Windows
+    default input if it is a real (non-virtual) device -> the first real
+    input device. Returns None only when nothing can be resolved (which
+    means "let the backend use its default").
+    """
+    import sounddevice as sd
+
+    all_inputs = list_input_devices()
+    valid_ids = {idx for idx, _ in all_inputs}
+    if preferred is not None and preferred in valid_ids:
+        return preferred
+
+    real_inputs = [(i, n) for i, n in all_inputs if not is_virtual_device(n)]
+    try:
+        default_idx = sd.default.device[0]
+    except Exception:
+        default_idx = None
+    if default_idx is not None and default_idx >= 0:
+        default_name = next((n for i, n in all_inputs if i == default_idx), None)
+        if default_name is not None and not is_virtual_device(default_name):
+            return default_idx
+        log.warning("System default input %r is virtual/unknown; skipping", default_name)
+    if real_inputs:
+        return real_inputs[0][0]
+    return None
+
+
+def probe_peak(device: int | None, seconds: float = 0.5, sample_rate: int = 16000) -> float:
+    """Capture briefly and return the peak amplitude (0.0 on failure).
+
+    Used by the startup self-check: a healthy microphone in a normal room
+    never delivers exact digital silence.
+    """
+    import sounddevice as sd
+
+    try:
+        frames = int(seconds * sample_rate)
+        data = sd.rec(
+            frames, samplerate=sample_rate, channels=1, dtype="float32", device=device
+        )
+        sd.wait()
+        return float(np.max(np.abs(data)))
+    except Exception as exc:
+        log.warning("Mic probe failed on device %s: %s", device, exc)
+        return 0.0
 
 
 class Recorder:

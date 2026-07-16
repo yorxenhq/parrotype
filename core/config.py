@@ -48,6 +48,8 @@ class Config:
 
     # Behaviour
     insert_method: str = "auto"        # auto (type short / clipboard long) | clipboard
+    ui_language: str = "auto"          # auto (system) | ru | en
+    first_run_done: bool = False       # first-run wizard completed
     autostart: bool = False
     sound_ticks: bool = True
     keep_history: bool = True

@@ -111,6 +111,49 @@ class Engine:
     def model_loaded(self) -> bool:
         return self._model is not None
 
+    def is_model_cached(self) -> bool:
+        """True when the current model's weights are already on disk."""
+        from faster_whisper.utils import download_model
+
+        try:
+            download_model(self.config.model_size, local_files_only=True)
+            return True
+        except Exception:
+            return False
+
+    def ensure_model(self, progress_cb=None) -> None:
+        """Download the model if missing, reporting percent via progress_cb(int).
+
+        Percent tracks the byte-level tqdm bars of the snapshot download
+        (the multi-GB weights file dominates, so it reads naturally).
+        """
+        if self.is_model_cached():
+            return
+        from faster_whisper.utils import _MODELS
+        from huggingface_hub import snapshot_download
+        from tqdm import tqdm as _tqdm
+
+        repo_id = _MODELS.get(self.config.model_size, self.config.model_size)
+
+        class _ProgressTqdm(_tqdm):
+            def update(self, n=1):  # noqa: ANN001
+                result = super().update(n)
+                try:
+                    if (
+                        progress_cb is not None
+                        and self.total
+                        and self.total > 1_000_000   # byte bars only, not file counters
+                    ):
+                        progress_cb(min(100, int(self.n * 100 / self.total)))
+                except Exception:
+                    pass
+                return result
+
+        log.info("Downloading model %s (%s)", self.config.model_size, repo_id)
+        snapshot_download(repo_id, tqdm_class=_ProgressTqdm)
+        if progress_cb is not None:
+            progress_cb(100)
+
     def unload_model(self) -> None:
         self._model = None
         self._model_key = None
