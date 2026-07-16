@@ -41,6 +41,13 @@ _STRINGS: dict[str, dict[str, str]] = {
     "pill.transcribe_error": {"ru": "ошибка распознавания: {err}", "en": "recognition error: {err}"},
     "pill.model_failed": {"ru": "модель не загрузилась: {err}", "en": "model failed to load: {err}"},
 
+    # -- app ------------------------------------------------------------------
+    "app.already_running_title": {"ru": "Parrotype", "en": "Parrotype"},
+    "app.already_running": {
+        "ru": "Parrotype уже запущен — ищи иконку в трее.",
+        "en": "Parrotype is already running — look for the tray icon.",
+    },
+
     # -- tray ---------------------------------------------------------------
     "tray.loading_model": {"ru": "Загружаю модель…", "en": "Loading model…"},
     "tray.ready": {"ru": "Готов", "en": "Ready"},
@@ -162,6 +169,10 @@ _STRINGS: dict[str, dict[str, str]] = {
     "wiz.model.rec_cpu": {"ru": "РЕКОМЕНДУЕМ · CPU", "en": "RECOMMENDED · CPU"},
     "wiz.model.downloading": {"ru": "Скачиваю модель — {pct}%", "en": "Downloading model — {pct}%"},
     "wiz.model.cached": {"ru": "Модель уже скачана.", "en": "Model already downloaded."},
+    "wiz.model.gpu_missing_libs": {
+        "ru": "GPU найден, но CUDA-библиотек нет — работаю на CPU.",
+        "en": "GPU detected, but CUDA libraries are missing — running on CPU.",
+    },
     "wiz.model.failed": {
         "ru": "Не получилось скачать — проверь интернет и попробуй ещё раз.",
         "en": "Download failed — check your internet connection and try again.",

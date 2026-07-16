@@ -77,6 +77,7 @@ class Engine:
         self.postfilter = PostFilter(self.config.replacements)
         self._model: "WhisperModel | None" = None
         self._model_key: tuple[str, str, str] | None = None
+        self._warmed_key: tuple[str, str, str] | None = None
 
     # -- model management ----------------------------------------------
 
@@ -90,9 +91,13 @@ class Engine:
             return
         log.info("Loading model %s on %s (%s)", *key)
         t0 = time.perf_counter()
+        # Cache hit -> fully offline load (no network round-trips at all;
+        # part of the "nothing leaves this machine" guarantee).
+        offline = self.is_model_cached()
         try:
             self._model = WhisperModel(
-                self.config.model_size, device=device, compute_type=compute
+                self.config.model_size, device=device, compute_type=compute,
+                local_files_only=offline,
             )
         except (RuntimeError, ValueError) as exc:
             if device == "cuda":
@@ -100,7 +105,8 @@ class Engine:
                 device, compute = "cpu", "int8"
                 key = (self.config.model_size, device, compute)
                 self._model = WhisperModel(
-                    self.config.model_size, device=device, compute_type=compute
+                    self.config.model_size, device=device, compute_type=compute,
+                    local_files_only=offline,
                 )
             else:
                 raise
@@ -157,6 +163,33 @@ class Engine:
     def unload_model(self) -> None:
         self._model = None
         self._model_key = None
+
+    def warm_up(self) -> float:
+        """Throwaway decode to warm the inference kernels; returns seconds.
+
+        The first CUDA transcription after load_model pays a large one-time
+        cost (kernel compilation/caching); running it on 0.5s of noise in
+        the background makes the first real dictation respond instantly.
+        VAD is disabled so the encoder+decoder actually execute.
+        """
+        self.load_model()
+        assert self._model is not None
+        if self._warmed_key == self._model_key:
+            return 0.0
+        noise = (np.random.default_rng(0).standard_normal(
+            int(0.5 * self.config.sample_rate)
+        ) * 0.02).astype(np.float32)
+        t0 = time.perf_counter()
+        segments, _ = self._model.transcribe(
+            noise, language="en", vad_filter=False, beam_size=1,
+            temperature=0, condition_on_previous_text=False,
+        )
+        for _segment in segments:
+            pass
+        self._warmed_key = self._model_key
+        elapsed = time.perf_counter() - t0
+        log.info("Engine warm-up finished in %.2fs", elapsed)
+        return elapsed
 
     # -- transcription ---------------------------------------------------
 

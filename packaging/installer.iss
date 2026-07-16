@@ -4,11 +4,12 @@
 ; Output:  dist\ParrotypeSetup.exe
 
 #define AppName "Parrotype"
-#define AppVersion "0.1.0"
+#define AppVersion "1.0.0"
 #define AppExe "Parrotype.exe"
 
 [Setup]
-AppId={{7E1B4A83-9C93-4A5E-A0B7-PARROTYPE01}
+; Upgrade identity — do not change between releases.
+AppId={{8565C990-68C4-443E-900B-28CA79F5907F}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppName}

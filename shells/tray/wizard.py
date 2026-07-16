@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from core import Config, Engine, Recorder, list_input_devices
-from core.config import cuda_available
+from core.config import cuda_available, cuda_usable
 from shells.tray import theme
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
@@ -39,6 +39,7 @@ _LEVEL_OK = 0.02      # RMS above this = "hearing you"
 
 class FirstRunWizard(QDialog):
     finished_ok = Signal()
+    model_available = Signal()   # weights on disk -> host app can load+warm now
     _level = Signal(float)
     _download_pct = Signal(int)
     _download_done = Signal(bool)
@@ -159,7 +160,8 @@ class FirstRunWizard(QDialog):
         layout.setContentsMargins(24, 22, 24, 12)
         self._page_header(layout, 2, tr("wiz.model.title"), tr("wiz.model.desc"))
 
-        has_gpu = cuda_available()
+        has_gpu = cuda_usable()
+        gpu_blocked = cuda_available() and not has_gpu   # device present, libs missing
         recommended = "large-v3-turbo" if has_gpu else "small"
         options = (
             [("large-v3-turbo", "~0.8s"), ("medium", "~0.9s"), ("small", "~0.5s")]
@@ -176,6 +178,13 @@ class FirstRunWizard(QDialog):
         self.model_combo.setCurrentIndex(0)
         self.model_combo.currentIndexChanged.connect(self._on_model_changed)
         layout.addWidget(self.model_combo)
+        if gpu_blocked:
+            # GPU detected but CUDA runtime libs are absent (e.g. packaged
+            # CPU-only build): say so honestly instead of a silent fallback.
+            gpu_note = QLabel(tr("wiz.model.gpu_missing_libs"))
+            gpu_note.setObjectName("muted")
+            gpu_note.setWordWrap(True)
+            layout.addWidget(gpu_note)
         layout.addSpacing(16)
 
         self.dl_label = QLabel("")
@@ -325,6 +334,7 @@ class FirstRunWizard(QDialog):
             self.dl_retry_btn.hide()
             self.dl_label.setText(tr("wiz.model.cached"))
             self._sync_footer()
+            self.model_available.emit()
             return
         self._download_ok = False
         self._downloading = True
@@ -354,6 +364,7 @@ class FirstRunWizard(QDialog):
         if ok:
             self.dl_bar.setValue(100)
             self.dl_label.setText(tr("wiz.model.cached"))
+            self.model_available.emit()
         else:
             self.dl_bar.hide()
             self.dl_label.setText(tr("wiz.model.failed"))

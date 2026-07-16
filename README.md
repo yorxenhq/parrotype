@@ -6,7 +6,7 @@ Local voice dictation for Windows: press a hotkey, speak, release — your
 words are typed into whatever window you're in. Runs fully on your machine
 (faster-whisper). No cloud, no account, no audio leaving your laptop.
 
-Status: **v1.5 release candidate** — core + polished tray app + first-run
+Status: **1.0.0** — core + polished tray app + first-run
 wizard + CLI, reliability package, RU/EN UI, PyInstaller build + Inno
 Setup script. Live-microphone flows and the installed build still need a
 human pass (see [What still needs a human check](#what-still-needs-a-human-check)).

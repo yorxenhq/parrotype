@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 APP_NAME = "Parrotype"
-APP_VERSION = "0.1.0"
+APP_VERSION = "1.0.0"
 
 log = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class Config:
         """Resolve (device, compute_type) honouring 'auto' values."""
         device = self.device
         if device == "auto":
-            device = "cuda" if cuda_available() else "cpu"
+            device = "cuda" if cuda_usable() else "cpu"
         compute = self.compute_type
         if compute == "auto":
             compute = "float16" if device == "cuda" else "int8"
@@ -110,7 +110,12 @@ class Config:
 
 
 def cuda_available() -> bool:
-    """True when ctranslate2 reports a usable CUDA device."""
+    """True when ctranslate2 sees a CUDA device (driver-level only).
+
+    NOTE: this does NOT mean inference will work — the runtime libraries
+    (cuBLAS/cuDNN) may be missing (e.g. the CPU-only packaged build on a
+    GPU machine). Use cuda_usable() for decisions.
+    """
     try:
         import ctranslate2
 
@@ -118,3 +123,30 @@ def cuda_available() -> bool:
     except Exception as exc:  # pragma: no cover - defensive: any backend error means "no CUDA"
         log.debug("CUDA probe failed: %s", exc)
         return False
+
+
+def cuda_usable() -> bool:
+    """Real GPU probe: device present AND the CUDA runtime DLLs load.
+
+    Catches the packaged-build trap where a GPU is detected but
+    cublas/cudnn are absent — model load would fail and silently fall
+    back to CPU with a GPU-sized model (i.e. "the app feels slow").
+    """
+    if not cuda_available():
+        return False
+    import ctypes
+    import sys as _sys
+
+    if _sys.platform != "win32":
+        return True
+    # Engine import registers pip-wheel DLL dirs on PATH; probe the exact
+    # libraries ctranslate2 loads lazily at model init.
+    import core.engine  # noqa: F401  (side effect: DLL dirs on PATH)
+
+    for dll in ("cublas64_12.dll", "cudnn64_9.dll"):
+        try:
+            ctypes.WinDLL(dll)
+        except OSError:
+            log.info("CUDA device present but %s is missing — GPU unusable", dll)
+            return False
+    return True

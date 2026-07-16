@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from core import Config, Engine, History, Recorder
 from core.audio import pick_input_device, probe_peak
 from core.config import app_data_dir
-from shells.tray import autostart, micguard, sounds, theme
+from shells.tray import autostart, micguard, singleinstance, sounds, theme
 from shells.tray.hotkeys import HotkeyManager
 from shells.tray.i18n import current_language, set_language, tr
 from shells.tray.icons import TrayState, make_icon
@@ -173,6 +173,9 @@ class TrayApp(QObject):
         self.wizard = FirstRunWizard(self.config)
         self.wizard.finished_ok.connect(self._on_wizard_done)
         self.wizard.rejected.connect(self._on_wizard_done)
+        # As soon as the wizard has the model on disk (step 2), load and
+        # warm it in the background so step 3 "try dictating" is instant.
+        self.wizard.model_available.connect(self._preload_model)
         self.wizard.show()
         self.wizard.raise_()
         self.wizard.activateWindow()
@@ -201,6 +204,9 @@ class TrayApp(QObject):
                     if not self.engine.is_model_cached():
                         self.engine.ensure_model(progress_cb=on_pct)
                     self.engine.load_model()
+                    # Throwaway decode: without it the first real dictation
+                    # pays the CUDA cold-start and feels sluggish.
+                    self.engine.warm_up()
                 self.bridge.model_ready.emit()
             except Exception as exc:
                 log.exception("Model preload failed")
@@ -457,6 +463,14 @@ class TrayApp(QObject):
 
 def main() -> int:
     setup_logging()
+    if not singleinstance.acquire():
+        # Second copy would fight the first over the global hotkey hook.
+        set_language(Config.load().ui_language)
+        log.info("Another Parrotype instance is already running; exiting")
+        singleinstance.notify_already_running(
+            tr("app.already_running_title"), tr("app.already_running")
+        )
+        return 0
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     app.setApplicationName("Parrotype")
