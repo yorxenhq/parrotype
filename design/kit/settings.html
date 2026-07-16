@@ -18,8 +18,8 @@
   .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
   .mono { font-family:"Cascadia Mono","Consolas",monospace; }
 
-  /* window frame 760x500, QSS-accurate */
-  .win { width:760px; height:500px; margin:0 auto; background:#1E1E24; border:1px solid #2E2E36;
+  /* window frame 760x560, QSS-accurate */
+  .win { width:760px; height:560px; margin:0 auto; background:#1E1E24; border:1px solid #2E2E36;
          border-radius:8px; overflow:hidden; display:flex; flex-direction:column;
          box-shadow:0 24px 80px rgba(0,0,0,.55); font-size:13px; }
   .titlebar { height:34px; background:#191920; border-bottom:1px solid #2E2E36; display:flex; align-items:center;
@@ -50,7 +50,7 @@
 <div class="wrap">
   <div class="eyebrow">Parrotype · Design Kit · Components</div>
   <h1>Окно настроек</h1>
-  <div class="sub">Одно окно 760×500, сайдбар слева. Открывается редко — вторичная поверхность. Превью повторяет фактический QSS (<span class="mono">shells/tray/settings.py</span>), вкладка «Общее».</div>
+  <div class="sub">Одно окно 760×560, сайдбар слева. Открывается редко — вторичная поверхность. Превью повторяет фактический QSS (<span class="mono">shells/tray/settings.py</span>), вкладка «Общее».</div>
 
   <div class="win">
     <div class="titlebar">Parrotype — настройки <span class="winbtns"><span>—</span><span>▢</span><span>✕</span></span></div>
@@ -68,7 +68,7 @@
         <div class="row"><label>Язык распознавания:</label><div class="field combo">Auto<span class="arrow">▼</span></div></div>
         <div class="row"><label>Язык интерфейса:</label><div class="field combo">Как в системе<span class="arrow">▼</span></div></div>
         <div class="row"><label>Способ вставки:</label><div class="field combo">Печать (быстро, не трогает буфер)<span class="arrow">▼</span></div></div>
-        <div class="row"><label>Микрофон:</label><div class="field combo">Системный по умолчанию<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Микрофон:</label><div class="field combo">Как в системе<span class="arrow">▼</span></div></div>
         <div class="row"><label>Уровень:</label><div style="width:250px;height:8px;border-radius:4px;background:#2E2E36;"><div style="width:45%;height:8px;border-radius:4px;background:#4FD1B0;"></div></div></div>
         <div class="row"><label>Автозапуск:</label><div class="check"><span class="box">✓</span>Запускать вместе с Windows</div></div>
         <div class="row"><label>Звук:</label><div class="check"><span class="box">✓</span>Тихий тик старта/стопа записи</div></div>
@@ -82,7 +82,9 @@
     <span class="mono">#17171C</span> с рамкой <span class="mono">#2E2E36</span>, радиус 6px. Состав строк
     вкладки «Общее» — фактический (язык распознавания/интерфейса, способ вставки, live-уровень микрофона).<br>
     <b>Соответствие выросло:</b> в приложении теперь глобальный QSS (комбо, чекбоксы, скроллы, меню) и
-    тёмный тайтлбар через DWM — окно совпадает с этой карточкой. Реальные рендеры: design/preview/settings-tabs.png.
+    тёмный тайтлбар через DWM — окно совпадает с этой карточкой. Вкладка «Модель» — карточки-радио
+    (см. карточку «Мастер», тот же виджет); «О программе» — обещания (локально/бесплатно), тумблер
+    еженедельной проверки обновлений и кнопка «Угостить кофе». Реальные рендеры: design/preview/settings-tabs.png.
   </div>
 </div>
 </body>

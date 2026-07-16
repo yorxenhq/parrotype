@@ -82,11 +82,11 @@ def _make_pill(state: str):  # noqa: ANN001
     demo_levels = [0.28, 0.62, 0.95, 0.7, 0.4, 0.55, 0.8, 0.35,
                    0.6, 0.9, 0.5, 0.3, 0.66, 0.45]
     if state == "listening":
-        pill.show_listening("RU", toggle_mode=False)
+        pill.show_listening("ru", toggle_mode=False)
         pill._heights = demo_levels
         pill._elapsed_ms = 7000
     elif state == "toggle":
-        pill.show_listening("AUTO", toggle_mode=True)
+        pill.show_listening("auto", toggle_mode=True)
         pill._heights = list(reversed(demo_levels))
         pill._elapsed_ms = 91000
     elif state == "transcribing":
@@ -146,10 +146,11 @@ def render_settings() -> Image.Image:
     history.add("Привет, собери отчёт по проекту", 4.2)
     history.add("Deploy the worker on Cloudflare and restart the pipeline", 6.0)
     config.replacements = {"клод": "Claude", "кубер": "Kubernetes"}
+    config.update_available_tag = "v1.1.0"   # show the About update line
 
     dialog = SettingsDialog(config, history)
     _hide_from_screen(dialog)
-    dialog.resize(760, 500)
+    dialog.resize(760, 560)
     tabs = ["General", "Model", "Dictionary", "History", "About"]
     shots = []
     for i, name in enumerate(tabs):
@@ -229,9 +230,10 @@ def render_wizard() -> Image.Image:
 def render_menu() -> Image.Image:
     menu = QMenu()
     _hide_from_screen(menu)
-    status = QAction("Готов · large-v3-turbo @ cuda (float16)")
+    status = QAction("Готов · large-v3-turbo · GPU")
     status.setEnabled(False)
     menu.addAction(status)
+    menu.addAction(QAction(tr("tray.update", ver="1.1"), menu))
     menu.addSeparator()
     menu.addAction(QAction(tr("tray.copy_last"), menu))
     pause = QAction(tr("tray.pause"), menu)
@@ -255,7 +257,7 @@ def render_menu() -> Image.Image:
     draw = ImageDraw.Draw(canvas)
     draw.text((48, 28), "Parrotype — tray context menu (QSS-styled, real render)", font=font_t, fill=TITLE)
     canvas.alpha_composite(big, ((1600 - big.width) // 2, 100))
-    draw.text((48, 100 + big.height + 12), "Status line + copy last + pause (checked) + settings/history/quit", font=font_c, fill=CAPTION)
+    draw.text((48, 100 + big.height + 12), "Status line + update notice + copy last + pause (checked) + settings/history/quit", font=font_c, fill=CAPTION)
     return canvas
 
 

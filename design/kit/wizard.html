@@ -69,13 +69,13 @@
 <div class="wrap">
   <div class="eyebrow">Parrotype · Design Kit · Components</div>
   <h1>Мастер первого запуска</h1>
-  <div class="sub">Лицо продукта при установке: «поставил и работает». РЕАЛИЗОВАН в коде (shells/tray/wizard.py, 3 шага из spec §3.5): микрофон с live-уровнем → модель с рекомендацией по железу и прогрессом скачивания → хоткей с тренировочной диктовкой. Окно 560×470, маскота нет — мастер сразу о деле. Реальные рендеры: design/preview/wizard-steps.png.</div>
+  <div class="sub">Лицо продукта при установке: «поставил и работает». РЕАЛИЗОВАН в коде (shells/tray/wizard.py, 3 шага из spec §3.5): микрофон с live-уровнем → модель через карточки-радио (человеческая строка + цифры справа, устройство одной muted-строкой) → хоткей с тренировочной диктовкой. Окно 560×540, маскота нет — мастер сразу о деле. Реальные рендеры: design/preview/wizard-steps.png.</div>
 
   <div class="steps">
     <!-- step 1 -->
     <div class="card">
       <div class="head">
-        <div class="stepno">ШАГ 1 · 3</div>
+        <div class="stepno">шаг 1 из 3</div>
         <h3>Микрофон</h3>
         <div class="desc">Выбор устройства + живой waveform: видно, что микрофон слышит, до первой диктовки. Виртуальные устройства скрыты.</div>
       </div>
@@ -100,15 +100,16 @@
     <!-- step 2 -->
     <div class="card">
       <div class="head">
-        <div class="stepno">ШАГ 2 · 3</div>
+        <div class="stepno">шаг 2 из 3</div>
         <h3>Модель</h3>
-        <div class="desc">Авто-замер железа уже сделан — мастер сразу рекомендует. Скачивание с прогрессом, без тишины.</div>
+        <div class="desc">Карточки-радио: одна человеческая строка про выбор, цифры справа мелко. Устройство — одной muted-строкой под списком. Скачивание с прогрессом, без тишины.</div>
       </div>
       <div class="stage">
-        <div class="modelrow rec">large-v3-turbo<span class="lat">&nbsp;· ~0.8с на фразу</span><span class="tag">РЕКОМЕНДУЕМ · GPU</span></div>
-        <div class="modelrow">medium<span class="lat">&nbsp;· ~0.9с, меньше памяти</span></div>
-        <div class="modelrow">small<span class="lat">&nbsp;· для работы без GPU</span></div>
-        <div class="cap">Скачиваю модель — 980 МБ из 1.58 ГБ…</div>
+        <div class="modelrow rec"><span><b>large-v3-turbo</b> <span class="tag" style="margin-left:6px; background:rgba(79,209,176,.16); border-radius:8px; padding:1px 8px;">рекомендуем</span><br><span class="lat">лучше всего слышит — видеокарте это легко</span></span><span class="lat" style="margin-left:auto; text-align:right;">~0.8 с на фразу<br>скачать ~1.6 ГБ</span></div>
+        <div class="modelrow"><span><b>medium</b><br><span class="lat">золотая середина — чуть меньше скачивать</span></span><span class="lat" style="margin-left:auto; text-align:right;">~0.9 с на фразу<br>скачать ~1.5 ГБ</span></div>
+        <div class="modelrow"><span><b>small</b><br><span class="lat">самая лёгкая — если место на диске дорого</span></span><span class="lat" style="margin-left:auto; text-align:right;">~0.5 с на фразу<br>скачать ~460 МБ</span></div>
+        <div class="cap">Распознавать будет видеокарта NVIDIA — самый быстрый вариант.</div>
+        <div class="cap">Скачиваю модель — 62%</div>
         <div class="progress"><i></i></div>
       </div>
       <div class="foot">
@@ -120,8 +121,8 @@
     <!-- step 3 -->
     <div class="card">
       <div class="head">
-        <div class="stepno">ШАГ 3 · 3</div>
-        <h3>Хоткей и проба</h3>
+        <div class="stepno">шаг 3 из 3</div>
+        <h3>Хоткей и первая диктовка</h3>
         <div class="desc">Захват комбинации + тренировочная диктовка прямо в поле мастера — первый успех до выхода из мастера.</div>
       </div>
       <div class="stage">
@@ -132,6 +133,7 @@
         <div class="cap">Попробуй продиктовать сюда:</div>
         <div class="trainbox"><b>Привет, это Parrotype — проверка связи.</b><span style="opacity:.6;">|</span></div>
         <div style="text-align:center;"><span class="pillmini"><span class="recdot"></span>слушаю · отпусти — вставлю</span></div>
+        <div class="cap">Parrotype бесплатный для всех. Понравится — в «О программе» можно угостить автора кофе.</div>
       </div>
       <div class="foot">
         <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
