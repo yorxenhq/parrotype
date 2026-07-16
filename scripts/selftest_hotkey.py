@@ -19,13 +19,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import subprocess  # noqa: E402
+
 from PySide6.QtCore import QCoreApplication, QTimer  # noqa: E402
 
+from scripts import testguard  # noqa: E402
 from shells.tray.hotkeys import HotkeyManager, validate_combo  # noqa: E402
 from shells.tray import wininput  # noqa: E402
 
 events: list[str] = []
 results: list[tuple[str, bool]] = []
+_guard: testguard.FocusGuard | None = None
 
 
 def check(name: str, ok: bool) -> None:
@@ -34,17 +38,45 @@ def check(name: str, ok: bool) -> None:
 
 
 def _press(*names: str) -> None:
+    # Injections only while OUR target window owns the foreground —
+    # combos like ctrl+alt+space must never hit the user's active app.
     for n in names:
+        if _guard is not None and not _guard.ok():
+            raise RuntimeError("focus lost — injection aborted")
         wininput.send_key(wininput._NAME_TO_VK[n], True)
 
 
 def _release(*names: str) -> None:
     for n in names:
-        wininput.send_key(wininput._NAME_TO_VK[n], False)
+        wininput.send_key(wininput._NAME_TO_VK[n], False)  # always release
 
 
 def main() -> int:
+    global _guard
     app = QCoreApplication(sys.argv)
+
+    # Own foreground target + idle gate before any injection.
+    target_proc = subprocess.Popen(
+        [sys.executable, str(Path(__file__).parent / "edit_target.py")]
+    )
+    hwnd = 0
+    for _ in range(20):
+        time.sleep(0.3)
+        hwnd, _edit = testguard.find_edit_target()
+        if hwnd:
+            break
+    if not hwnd:
+        print("FAIL: edit_target window did not appear")
+        return 1
+    _guard = testguard.FocusGuard(hwnd)
+    if not testguard.wait_for_user_idle(min_idle_s=2.0, timeout_s=120):
+        print("FAIL: user never went idle; not injecting")
+        target_proc.kill()
+        return 1
+    if not _guard.acquire():
+        print("FAIL: could not own the foreground; not injecting")
+        target_proc.kill()
+        return 1
 
     check(
         "combo validation accepts good combos",
@@ -61,6 +93,16 @@ def main() -> int:
 
     def scenario() -> None:
         time.sleep(0.3)  # let the hook thread install
+        try:
+            _scenario_body()
+        except RuntimeError as exc:
+            print(f"ABORT: {exc}")
+        finally:
+            manager.unbind()
+            target_proc.kill()
+            app.quit()
+
+    def _scenario_body() -> None:
 
         # PTT: hold ctrl+alt, release
         _press("ctrl", "alt")
@@ -99,9 +141,6 @@ def main() -> int:
         check("toggle did not trigger PTT", events.count("ptt_down") == 1)
         check("Esc cancel fires when armed, once", events.count("cancel") == 1)
         check("pause gate silences hotkeys", paused_silent)
-
-        manager.unbind()
-        app.quit()
 
     QTimer.singleShot(200, scenario)
     app.exec()

@@ -16,6 +16,7 @@ import ctypes
 import ctypes.wintypes as wt
 import logging
 import threading
+import time
 from typing import Callable
 
 log = logging.getLogger(__name__)
@@ -166,6 +167,7 @@ class KeyboardHook:
 # -- key injection (SendInput) ------------------------------------------------
 
 _KEYEVENTF_KEYUP = 0x0002
+_KEYEVENTF_UNICODE = 0x0004
 _INPUT_KEYBOARD = 1
 ULONG_PTR = ctypes.c_size_t
 
@@ -190,6 +192,105 @@ def send_key(vk: int, down: bool) -> None:
     inp.type = _INPUT_KEYBOARD
     inp.union.ki = _KEYBDINPUT(vk, 0, 0 if down else _KEYEVENTF_KEYUP, 0, 0)
     user32.SendInput(1, ctypes.byref(inp), ctypes.sizeof(_INPUT))
+
+
+def _send_batch(events: list[tuple[int, int, int]]) -> int:
+    """Send a batch of (wVk, wScan, dwFlags) keyboard events. Returns count sent."""
+    n = len(events)
+    if not n:
+        return 0
+    array = (_INPUT * n)()
+    for i, (vk, scan, flags) in enumerate(events):
+        array[i].type = _INPUT_KEYBOARD
+        array[i].union.ki = _KEYBDINPUT(vk, scan, flags, 0, 0)
+    return user32.SendInput(n, array, ctypes.sizeof(_INPUT))
+
+
+class InjectionAborted(RuntimeError):
+    """Raised when an abort_check callback vetoes further key injection."""
+
+
+def type_text(
+    text: str,
+    chunk_chars: int = 8,
+    chunk_delay_s: float = 0.008,
+    abort_check: Callable[[], bool] | None = None,
+) -> None:
+    """Type `text` into the focused window via SendInput KEYEVENTF_UNICODE.
+
+    Layout-independent, does not touch the clipboard. Characters outside
+    the BMP (e.g. emoji) are sent as surrogate pairs. Newlines/tabs are
+    sent as real Enter/Tab key presses. Raises OSError if Windows rejects
+    part of the input stream.
+
+    abort_check (optional): called before the first and every subsequent
+    chunk; returning False raises InjectionAborted immediately — used by
+    test harnesses to stop typing the moment the target window loses
+    focus (keystrokes must never leak into other windows).
+    """
+    events: list[tuple[int, int, int]] = []
+    for ch in text.replace("\r\n", "\n").replace("\r", "\n"):
+        if ch == "\n":
+            events.append((0x0D, 0, 0))
+            events.append((0x0D, 0, _KEYEVENTF_KEYUP))
+        elif ch == "\t":
+            events.append((0x09, 0, 0))
+            events.append((0x09, 0, _KEYEVENTF_KEYUP))
+        else:
+            data = ch.encode("utf-16-le")
+            for i in range(0, len(data), 2):
+                unit = int.from_bytes(data[i : i + 2], "little")
+                events.append((0, unit, _KEYEVENTF_UNICODE))
+                events.append((0, unit, _KEYEVENTF_UNICODE | _KEYEVENTF_KEYUP))
+
+
+    for start in range(0, len(events), chunk_chars * 2):
+        if abort_check is not None and not abort_check():
+            raise InjectionAborted(
+                f"typing aborted at event {start}/{len(events)} (focus check failed)"
+            )
+        chunk = events[start : start + chunk_chars * 2]
+        sent = _send_batch(chunk)
+        if sent != len(chunk):
+            raise OSError(
+                f"SendInput injected {sent}/{len(chunk)} events "
+                f"(error {kernel32.GetLastError()})"
+            )
+        if start + len(chunk) < len(events):
+            time.sleep(chunk_delay_s)
+
+
+# -- physical key state (GetAsyncKeyState) ------------------------------------
+
+_MODIFIER_VKS = (0x10, 0x11, 0x12, 0x5B, 0x5C)   # Shift, Ctrl, Alt, LWin, RWin
+
+
+class _LASTINPUTINFO(ctypes.Structure):
+    _fields_ = [("cbSize", wt.UINT), ("dwTime", wt.DWORD)]
+
+
+def user_idle_seconds() -> float:
+    """Seconds since the last physical user input (GetLastInputInfo)."""
+    info = _LASTINPUTINFO(cbSize=ctypes.sizeof(_LASTINPUTINFO))
+    if not user32.GetLastInputInfo(ctypes.byref(info)):
+        return 0.0
+    return max(0.0, (kernel32.GetTickCount() - info.dwTime) / 1000.0)
+
+
+def modifiers_down() -> bool:
+    """True if any physical/injected modifier key is currently held."""
+    return any(user32.GetAsyncKeyState(vk) & 0x8000 for vk in _MODIFIER_VKS)
+
+
+def wait_modifiers_released(timeout_s: float = 2.0, poll_s: float = 0.02) -> bool:
+    """Wait until all modifier keys are up. Returns False on timeout."""
+
+    deadline = time.monotonic() + timeout_s
+    while time.monotonic() < deadline:
+        if not modifiers_down():
+            return True
+        time.sleep(poll_s)
+    return not modifiers_down()
 
 
 def send_combo(combo: str) -> None:

@@ -82,6 +82,20 @@ def main() -> int:
         overlay.hide_pill()
         check("overlay hidden", not overlay.isVisible())
 
+    def step_settings_mute() -> None:
+        check("hotkeys active before settings", not tray_app.hotkeys.paused)
+        tray_app._open_settings(0)
+        check("hotkeys muted while settings open", tray_app.hotkeys.paused)
+        tray_app.settings_dialog.hide()
+        check("hotkeys restored after settings closed", not tray_app.hotkeys.paused)
+        # user pause must survive a settings open/close cycle
+        tray_app.pause_action.setChecked(True)
+        tray_app._open_settings(0)
+        tray_app.settings_dialog.hide()
+        check("user pause survives settings cycle", tray_app.hotkeys.paused)
+        tray_app.pause_action.setChecked(False)
+        check("user unpause works", not tray_app.hotkeys.paused)
+
     def finish() -> None:
         tray_app._quit()
 
@@ -90,7 +104,8 @@ def main() -> int:
     QTimer.singleShot(1800, step_inserted)
     QTimer.singleShot(3200, step_error)
     QTimer.singleShot(3800, step_hide)
-    QTimer.singleShot(4200, finish)
+    QTimer.singleShot(4200, step_settings_mute)
+    QTimer.singleShot(5200, finish)
 
     app.exec()
 

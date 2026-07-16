@@ -47,6 +47,7 @@ class Config:
     hotkey_toggle: str = "ctrl+shift+space"  # press to start/stop (disjoint from PTT)
 
     # Behaviour
+    insert_method: str = "auto"        # auto (type short / clipboard long) | clipboard
     autostart: bool = False
     sound_ticks: bool = True
     keep_history: bool = True

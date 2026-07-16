@@ -17,7 +17,7 @@ from shells.tray import autostart, sounds
 from shells.tray.hotkeys import HotkeyManager
 from shells.tray.icons import TrayState, make_icon
 from shells.tray.overlay import OverlayPill
-from shells.tray.paste import paste_text
+from shells.tray.paste import insert_text
 from shells.tray.settings import SettingsDialog
 
 log = logging.getLogger(__name__)
@@ -41,7 +41,9 @@ class _Bridge(QObject):
     """Thread-safe signal bridge from audio/worker threads into the GUI."""
 
     level = Signal(float)
-    transcribed = Signal(str, float)     # text, audio_seconds
+    recognized = Signal(str, float)      # text, audio_seconds — BEFORE insert attempt
+    transcribed = Signal(str, float)     # text, audio_seconds — inserted OK
+    insert_failed = Signal(str)          # text left on the clipboard
     failed = Signal(str)
     model_ready = Signal()
 
@@ -57,7 +59,9 @@ class TrayApp(QObject):
 
         self.bridge = _Bridge()
         self.bridge.level.connect(self._on_level)
+        self.bridge.recognized.connect(self._on_recognized)
         self.bridge.transcribed.connect(self._on_transcribed)
+        self.bridge.insert_failed.connect(self._on_insert_failed)
         self.bridge.failed.connect(self._on_failed)
         self.bridge.model_ready.connect(self._update_status)
 
@@ -80,6 +84,8 @@ class TrayApp(QObject):
         self._recording = False
         self._toggle_mode = False
         self._busy = False
+        self._user_paused = False        # tray-menu pause
+        self._settings_open = False      # hotkeys muted while settings visible
 
         self.settings_dialog: SettingsDialog | None = None
         self._build_tray()
@@ -230,12 +236,22 @@ class TrayApp(QObject):
             try:
                 with self._engine_lock:
                     result = self.engine.transcribe(audio)
-                if result.text:
-                    paste_text(result.text)
-                self.bridge.transcribed.emit(result.text, audio_seconds)
             except Exception as exc:
                 log.exception("Transcription failed")
                 self.bridge.failed.emit(f"ошибка распознавания: {exc}")
+                return
+            if not result.text:
+                self.bridge.transcribed.emit("", audio_seconds)
+                return
+            # History is written BEFORE the insert attempt: a dictation
+            # must never be lost even if insertion fails.
+            self.bridge.recognized.emit(result.text, audio_seconds)
+            insert = insert_text(result.text, method=self.config.insert_method)
+            if insert.ok:
+                self.bridge.transcribed.emit(result.text, audio_seconds)
+            else:
+                log.error("Insert failed (%s): %s", insert.method, insert.message)
+                self.bridge.insert_failed.emit(result.text)
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -247,16 +263,23 @@ class TrayApp(QObject):
             self.overlay.hide_pill()
             self._set_tray_state(TrayState.IDLE)
 
+    def _on_recognized(self, text: str, audio_seconds: float) -> None:
+        # Called BEFORE the insert attempt — a dictation is never lost.
+        if self.config.keep_history:
+            self.history.add(text, audio_seconds)
+            if self.settings_dialog and self.settings_dialog.isVisible():
+                self.settings_dialog.refresh_history()
+
     def _on_transcribed(self, text: str, audio_seconds: float) -> None:
         self._busy = False
         if text:
             self.overlay.show_inserted(text)
-            if self.config.keep_history:
-                self.history.add(text, audio_seconds)
-                if self.settings_dialog and self.settings_dialog.isVisible():
-                    self.settings_dialog.refresh_history()
         else:
             self.overlay.show_error("речь не распознана — в записи не нашлось слов")
+
+    def _on_insert_failed(self, text: str) -> None:
+        self._busy = False
+        self.overlay.show_error("не смог вставить — текст в буфере, нажми Ctrl+V")
 
     def _on_failed(self, message: str) -> None:
         self._busy = False
@@ -274,14 +297,30 @@ class TrayApp(QObject):
             QApplication.clipboard().setText(last.text)
 
     def _on_pause_toggled(self, paused: bool) -> None:
+        self._user_paused = paused
+        self._apply_pause()
+
+    def _on_settings_visibility(self, visible: bool) -> None:
+        # Hotkeys are muted while the settings dialog is open so that
+        # AltGr (= Ctrl+Alt on some layouts) while typing in its fields
+        # does not start a recording.
+        self._settings_open = visible
+        self._apply_pause()
+
+    def _apply_pause(self) -> None:
+        paused = self._user_paused or self._settings_open
         self.hotkeys.set_paused(paused)
-        self._set_tray_state(TrayState.PAUSED if paused else TrayState.IDLE)
+        if not self._recording:
+            self._set_tray_state(TrayState.PAUSED if paused else TrayState.IDLE)
         self._update_status()
 
     def _open_settings(self, page: int) -> None:
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self.config, self.history)
             self.settings_dialog.config_changed.connect(self._on_config_changed)
+            self.settings_dialog.visibility_changed.connect(
+                self._on_settings_visibility
+            )
         self.settings_dialog.sidebar.setCurrentRow(page)
         self.settings_dialog.show()
         self.settings_dialog.raise_()

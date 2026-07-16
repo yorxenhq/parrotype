@@ -50,7 +50,16 @@ _TEST_WAV = Path(__file__).resolve().parents[2] / "assets" / "latency_test.wav"
 
 class SettingsDialog(QDialog):
     config_changed = Signal()
+    visibility_changed = Signal(bool)   # True while the dialog is on screen
     _latency_done = Signal(str)
+
+    def showEvent(self, event) -> None:  # noqa: N802, ANN001
+        super().showEvent(event)
+        self.visibility_changed.emit(True)
+
+    def hideEvent(self, event) -> None:  # noqa: N802, ANN001
+        super().hideEvent(event)
+        self.visibility_changed.emit(False)
 
     def __init__(self, config: Config, history: History, parent=None) -> None:  # noqa: ANN001
         super().__init__(parent)
@@ -128,6 +137,15 @@ class SettingsDialog(QDialog):
                 self.mic_combo.setCurrentIndex(pos)
         self.mic_combo.currentIndexChanged.connect(self._save_general)
         form.addRow("Микрофон:", self.mic_combo)
+
+        self.insert_combo = QComboBox()
+        self.insert_combo.addItem("Печать (быстро, не трогает буфер)", "auto")
+        self.insert_combo.addItem("Через буфер обмена (совместимость)", "clipboard")
+        pos = self.insert_combo.findData(self.config.insert_method)
+        if pos >= 0:
+            self.insert_combo.setCurrentIndex(pos)
+        self.insert_combo.currentIndexChanged.connect(self._save_general)
+        form.addRow("Способ вставки:", self.insert_combo)
 
         self.autostart_check = QCheckBox("Запускать вместе с Windows")
         self.autostart_check.setChecked(self.config.autostart)
@@ -295,6 +313,7 @@ class SettingsDialog(QDialog):
 
     def _save_general(self) -> None:
         self.config.language = self.lang_combo.currentData()
+        self.config.insert_method = self.insert_combo.currentData()
         self.config.input_device = self.mic_combo.currentData()
         self.config.autostart = self.autostart_check.isChecked()
         self.config.sound_ticks = self.sound_check.isChecked()

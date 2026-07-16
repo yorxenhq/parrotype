@@ -2,3 +2,5 @@
 pytest>=8.0
 pip-licenses>=5.0
 pillow>=10.0
+pywinauto>=0.6.9
+
