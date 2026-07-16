@@ -255,7 +255,8 @@ class TrayApp(QObject):
     # -- recording flow --------------------------------------------------------
 
     def _language_label(self) -> str:
-        return {"ru": "RU", "en": "EN"}.get(self.config.language, "AUTO")
+        lang = self.config.language
+        return "AUTO" if lang == "auto" else lang.upper()
 
     def _on_ptt_pressed(self) -> None:
         self._start_recording(toggle=False)

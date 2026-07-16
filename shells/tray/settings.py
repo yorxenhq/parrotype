@@ -184,8 +184,17 @@ class SettingsDialog(QDialog):
         self.toggle_edit.editingFinished.connect(self._save_hotkeys)
         form.addRow(tr("set.hotkey_toggle"), self.toggle_edit)
 
+        # Recognition languages: auto-detect + the set that passed the
+        # measured quality gate (scripts/lang_gate.py, >=80% keyword recall
+        # on large-v3-turbo) — see design/preview/lang-gate.md.
         self.lang_combo = QComboBox()
-        for label, code in (("Auto", "auto"), ("Русский", "ru"), ("English", "en")):
+        for label, code in (
+            ("Auto", "auto"), ("Русский", "ru"), ("English", "en"),
+            ("Español", "es"), ("Deutsch", "de"), ("Français", "fr"),
+            ("Italiano", "it"), ("Português", "pt"), ("Polski", "pl"),
+            ("Українська", "uk"), ("Nederlands", "nl"), ("Türkçe", "tr"),
+            ("日本語", "ja"), ("한국어", "ko"), ("中文", "zh"),
+        ):
             self.lang_combo.addItem(label, code)
         _select_by_data(self.lang_combo, self.config.language)
         self.lang_combo.currentIndexChanged.connect(self._save_general)
