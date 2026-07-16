@@ -103,7 +103,9 @@ Machine-verified (`pytest tests`, `scripts/selftest_*.py`):
 core/          engine, audio capture, config, history, post-filter
 shells/tray/   PySide6 app: overlay, tray, settings, hotkeys, paste
 shells/cli/    stdout transcription
-assets/        logo.svg (canonical mark), generated .ico/.png, test WAV
+assets/        logo.svg + logo-small.svg + appicon.svg (canonical "bar-parrot"
+               mark: full / no-eye tray variant / plaque icon), generated
+               app.ico + png, test WAV
 scripts/       benchmark + self-tests (tray / hotkey / paste) + TTS fixtures
 tests/         pytest suite
 DECISIONS.md   non-obvious calls made during the build

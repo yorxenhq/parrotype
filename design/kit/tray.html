@@ -36,7 +36,6 @@
   .mi { padding:8px 12px; border-radius:5px; display:flex; align-items:center; gap:10px; }
   .mi.disabled { color:#9A9AA6; }
   .mi.hover { background:#2E2E36; }
-  .mi .kbd { margin-left:auto; font-size:11px; color:#9A9AA6; }
   .sep { height:1px; background:#2E2E36; margin:5px 8px; }
   .checkmark { width:14px; text-align:center; color:#4FD1B0; flex:none; }
   .menunote { flex:1; font-size:12px; color:#9A9AA6; line-height:1.8; }
@@ -47,7 +46,7 @@
 <div class="wrap">
   <div class="eyebrow">Parrotype · Design Kit · Components</div>
   <h1>Трей: иконка-состояние и меню</h1>
-  <div class="sub">Иконка трея = индикатор состояния. Рендер из канона <span class="mono">assets/logo.svg</span> в рантайме; код: <span class="mono">shells/tray/icons.py</span>, <span class="mono">app.py</span>.</div>
+  <div class="sub">Иконка трея = индикатор состояния; в трее живёт small-вариант знака (без глаза, <span class="mono">assets/logo-small.svg</span>). Код: <span class="mono">shells/tray/icons.py</span>, <span class="mono">app.py</span>.</div>
 
   <h2>Состояния иконки</h2>
   <div class="iconrow">
@@ -56,28 +55,22 @@
       <div class="duo">
         <div>
           <svg width="32" height="32" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-            <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
-            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
           </svg>
           <div class="szcap mono">32</div>
         </div>
         <div>
           <svg width="16" height="16" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
           </svg>
           <div class="szcap mono">16</div>
         </div>
       </div>
-      <div class="statedesc">Канон на 32px; на 16px — упрощение: светлый толстый контур, без глаза.</div>
+      <div class="statedesc">Мятный small-знак <span class="mono">#4FD1B0</span> — модель загружена, хоткей активен.</div>
     </div>
 
     <div class="iconcell">
@@ -85,30 +78,24 @@
       <div class="duo">
         <div>
           <svg width="32" height="32" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-            <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
-            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
             <circle cx="78" cy="18" r="16" fill="#FF5C5C"/>
           </svg>
           <div class="szcap mono">32</div>
         </div>
         <div>
           <svg width="16" height="16" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
             <circle cx="78" cy="18" r="16" fill="#FF5C5C"/>
           </svg>
           <div class="szcap mono">16</div>
         </div>
       </div>
-      <div class="statedesc">Красный бейдж <span class="mono">#FF5C5C</span> в правом верхнем углу (r ≈ 0.17 × size).</div>
+      <div class="statedesc">Красный бейдж <span class="mono">#FF5C5C</span> справа сверху (r ≈ 0.17 × size).</div>
     </div>
 
     <div class="iconcell">
@@ -116,28 +103,22 @@
       <div class="duo">
         <div>
           <svg width="32" height="32" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#9A9AA6"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#9A9AA6"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#9A9AA6"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#9A9AA6" stroke-width="3"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#9A9AA6"/>
-            <circle cx="56" cy="50" r="5" fill="#9A9AA6"/>
-            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#9A9AA6"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#9A9AA6"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#9A9AA6"/>
           </svg>
           <div class="szcap mono">32</div>
         </div>
         <div>
           <svg width="16" height="16" viewBox="0 0 96 96">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#9A9AA6"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#9A9AA6"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#9A9AA6"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#9A9AA6" stroke-width="6"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#9A9AA6"/>
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#9A9AA6"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#9A9AA6"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#9A9AA6"/>
           </svg>
           <div class="szcap mono">16</div>
         </div>
       </div>
-      <div class="statedesc">Все цвета знака → muted <span class="mono">#9A9AA6</span> (включается паузой в меню или открытыми настройками).</div>
+      <div class="statedesc">Весь знак → muted <span class="mono">#9A9AA6</span> (пауза из меню или открытые настройки).</div>
     </div>
   </div>
 

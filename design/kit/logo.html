@@ -28,8 +28,8 @@
   .cell { background:#17171C; border:1px solid #2E2E36; border-radius:12px; padding:24px;
           display:flex; flex-direction:column; align-items:center; gap:14px; }
   .cell .cap { font-size:11px; color:#9A9AA6; text-align:center; line-height:1.6; }
-  .sizes { display:flex; align-items:flex-end; gap:36px; }
-  .sizebox { display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .ladder { display:flex; align-items:flex-end; gap:32px; justify-content:center; }
+  .step { display:flex; flex-direction:column; align-items:center; gap:8px; }
   .rules { font-size:13px; color:#9A9AA6; line-height:1.8; }
   .rules b { color:#ECECF1; font-weight:600; }
   svg { display:block; }
@@ -39,18 +39,15 @@
 <div class="wrap">
   <div class="eyebrow">Parrotype · Design Kit · Brand</div>
   <h1>Знак и wordmark</h1>
-  <div class="sub">Канон — <span class="mono">assets/logo.svg</span>. Маскот живёт ТОЛЬКО в иконке (трей, exe, About) — внутри рабочих экранов UI маскота нет.</div>
+  <div class="sub">Канон «бар-попугай» — <span class="mono">assets/logo.svg</span> (утверждён владельцем, чистый baseline: без клюва и хохолка). Маскот живёт ТОЛЬКО в иконке (трей, exe, About) — внутри рабочих экранов UI его нет.</div>
 
   <div class="hero">
     <!-- canonical mark, verbatim from assets/logo.svg -->
     <svg width="144" height="144" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" aria-label="Parrotype mark">
-      <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-      <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-      <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-      <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
-      <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-      <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
-      <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+      <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+      <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+      <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+      <circle cx="64" cy="23.5" r="3.6" fill="#101014"/>
     </svg>
     <div>
       <div class="wordmark">Parro<span class="a">type</span></div>
@@ -60,54 +57,70 @@
 
   <h2>Метафора</h2>
   <div class="rules">
-    Профиль попугая, <b>хохолок = 3 waveform-бара</b> (звук, который становится текстом). Контур и клюв — accent
-    <span class="mono">#4FD1B0</span>, заливка головы — surface <span class="mono">#1E1E24</span>.
-    В wordmark акцентом выделен «type» — вторая половина метафоры: попугай <b>печатает</b>.
+    Три бара звуковой волны; третий бар поднимается и становится круглой головой птицы с глазом-точкой —
+    <b>волна распознавания и есть птица</b>. Речь на входе, попугай на выходе; голова читается и как «P».
+    Один цвет — accent <span class="mono">#4FD1B0</span>, глаз — <span class="mono">#101014</span>.
   </div>
 
-  <h2>Мини-версии (трей)</h2>
+  <h2>Варианты и лесенка размеров</h2>
   <div class="grid">
     <div class="cell">
-      <div class="sizes">
-        <div class="sizebox">
-          <svg width="32" height="32" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-            <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
-            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+      <div class="ladder">
+        <div class="step">
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+            <circle cx="64" cy="23.5" r="3.6" fill="#101014"/>
           </svg>
-          <div class="cap mono">32px · канон</div>
+          <div class="cap mono">96 · full</div>
         </div>
-        <div class="sizebox">
-          <svg width="16" height="16" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
-            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+        <div class="step">
+          <svg width="48" height="48" viewBox="0 0 96 96">
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+            <circle cx="64" cy="23.5" r="3.6" fill="#101014"/>
           </svg>
-          <div class="cap mono">16px · упрощение</div>
+          <div class="cap mono">48 · full</div>
+        </div>
+        <div class="step">
+          <svg width="32" height="32" viewBox="0 0 96 96">
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+          </svg>
+          <div class="cap mono">32 · small</div>
+        </div>
+        <div class="step">
+          <svg width="16" height="16" viewBox="0 0 96 96">
+            <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+            <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+            <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+          </svg>
+          <div class="cap mono">16 · small</div>
         </div>
       </div>
-      <div class="cap">Рядом — реальные размеры рендера.<br>Ниже — те же варианты крупно, для сверки формы.</div>
+      <div class="cap"><b style="color:#ECECF1;">Правило: full ≥ 48px / small 16–32px.</b><br>
+        Small (<span class="mono">assets/logo-small.svg</span>) — та же геометрия без глаза:
+        на пикселях трея глаз превращается в шум.</div>
     </div>
     <div class="cell">
-      <div class="sizes">
-        <svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-          <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-          <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-          <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-          <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
-          <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-        </svg>
-        <div class="cap" style="align-self:center; max-width:220px; text-align:left;">
-          Упрощение для 16px: контур светлый <span class="mono">#ECECF1</span> и толще
-          (<span class="mono">stroke 6</span>), глаз убран — на пикселе размера трея он превращается в шум.
-        </div>
-      </div>
+      <!-- app icon, verbatim from assets/appicon.svg -->
+      <svg width="128" height="128" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="90" height="90" rx="22" fill="#15151A"/>
+        <rect x="3" y="3" width="90" height="90" rx="22" fill="none" stroke="#4FD1B0" stroke-width="2.5"/>
+        <g transform="translate(11,12) scale(0.78)">
+          <rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+          <rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+          <path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+          <circle cx="64" cy="23.5" r="3.6" fill="#101014"/>
+        </g>
+      </svg>
+      <div class="cap">Иконка приложения (exe / installer): знак в плашке
+        <span class="mono">#15151A</span> с accent-каймой, радиус 22.<br>
+        <span class="mono">assets/appicon.svg → app.ico (16/32/48/256)</span>;
+        в кадрах 16/32 внутри плашки — small-вариант.</div>
     </div>
   </div>
 
@@ -115,8 +128,8 @@
   <div class="rules">
     <b>Где живёт:</b> иконка трея, иконка exe/installer, страница «О программе», будущий лендинг/соцсети.<br>
     <b>Где НЕ живёт:</b> оверлей-пилюля, окно настроек, любые рабочие экраны — там строгий «тихий» стиль.<br>
-    <b>Один источник:</b> знак рендерится из <span class="mono">assets/logo.svg</span> в рантайме
-    (<span class="mono">shells/tray/icons.py</span>) — рукописных PNG-копий нет.
+    <b>Один источник:</b> знак рендерится из <span class="mono">assets/logo.svg / logo-small.svg</span> в рантайме
+    (<span class="mono">shells/tray/icons.py</span>) — рукописных PNG-копий нет. Геометрию канона не редактируем в ките.
   </div>
 </div>
 </body>

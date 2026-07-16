@@ -1,12 +1,18 @@
-"""App/tray icon rendered from the canonical mascot mark (assets/logo.svg).
+"""App/tray icon rendered from the canonical mark (assets/logo*.svg).
 
-The mascot lives ONLY in the tray icon, app icon and the About page —
-inside working UI screens the style stays strict, no mascot.
+Canon ("bar-parrot", clean baseline): a waveform whose third bar rises
+into a round head with a dot eye — the recognition wave IS the bird.
+No beak, no crest. Two variants:
+  - logo.svg        mark with the eye — sizes >= 48px, About, brand
+  - logo-small.svg  same without the eye — tray sizes 16-32px
 
-Tray rules:
-  - 16 px: simplified mark (thicker light outline, no eye)
-  - recording: red badge circle, top-right
-  - paused: whole mark in muted grey
+Tray states:
+  - idle:      mint mark
+  - recording: mint mark + red badge circle, top-right
+  - paused:    whole mark in muted grey
+
+The mascot lives ONLY in the tray/app icon and the About page — inside
+working UI screens the style stays strict, no mascot.
 """
 
 from __future__ import annotations
@@ -20,29 +26,21 @@ from PySide6.QtSvg import QSvgRenderer
 
 from shells.tray import theme
 
-_LOGO_PATH = Path(__file__).resolve().parents[2] / "assets" / "logo.svg"
+_ASSETS = Path(__file__).resolve().parents[2] / "assets"
 
-# Embedded copy of the canonical mark (fallback when assets/ is not shipped).
-_LOGO_SVG = """<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-  <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-  <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-  <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-  <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
-  <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-  <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
-  <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
-</svg>"""
+# Embedded copies of the canonical marks (fallback when assets/ is not shipped).
+_LOGO_SVG = """<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+<rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+<rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+<path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/>
+<circle cx="64" cy="23.5" r="3.6" fill="#101014"/></svg>"""
 
-# 16 px simplification: thicker light outline, no eye; crest + beak stay.
-_LOGO_SVG_SMALL = """<svg width="96" height="96" viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
-  <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
-  <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
-  <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
-  <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
-  <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
-</svg>"""
+_LOGO_SMALL_SVG = """<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">
+<rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/>
+<rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/>
+<path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/></svg>"""
 
-_ACCENT_COLORS = (theme.ACCENT, "#ECECF1", "#101014")
+_MARK_COLORS = (theme.ACCENT,)   # recolored to muted when paused
 
 
 class TrayState(Enum):
@@ -51,19 +49,24 @@ class TrayState(Enum):
     PAUSED = auto()
 
 
-def _canon_svg() -> str:
-    if _LOGO_PATH.exists():
+def _read_svg(name: str, fallback: str) -> str:
+    path = _ASSETS / name
+    if path.exists():
         try:
-            return _LOGO_PATH.read_text(encoding="utf-8")
+            return path.read_text(encoding="utf-8")
         except OSError:
             pass
-    return _LOGO_SVG
+    return fallback
 
 
 def _svg_for(size: int, state: TrayState) -> bytes:
-    svg = _LOGO_SVG_SMALL if size <= 20 else _canon_svg()
+    # Rule: full mark >= 48px, simplified variant for 16-32px.
+    if size >= 48:
+        svg = _read_svg("logo.svg", _LOGO_SVG)
+    else:
+        svg = _read_svg("logo-small.svg", _LOGO_SMALL_SVG)
     if state == TrayState.PAUSED:
-        for color in _ACCENT_COLORS:
+        for color in _MARK_COLORS:
             svg = svg.replace(color, theme.MUTED)
     return svg.encode("utf-8")
 
