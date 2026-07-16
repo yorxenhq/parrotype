@@ -1,0 +1,166 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrotype — Components / Tray</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#101014; color:#ECECF1;
+    font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    padding:48px; min-height:100vh;
+  }
+  .wrap { max-width:960px; margin:0 auto; }
+  .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#9A9AA6; margin-bottom:8px; }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; }
+  .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
+  .mono { font-family:"Cascadia Mono","Consolas",monospace; }
+  h2 { font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+       color:#9A9AA6; margin:36px 0 14px; padding-top:24px; border-top:1px solid #2E2E36; }
+
+  .iconrow { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .iconcell { background:#17171C; border:1px solid #2E2E36; border-radius:12px; padding:24px;
+              display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .statename { font-size:13px; font-weight:600; }
+  .statedesc { font-size:11px; color:#9A9AA6; text-align:center; line-height:1.6; }
+  .duo { display:flex; align-items:flex-end; gap:28px; }
+  .szcap { font-size:10px; color:#9A9AA6; text-align:center; margin-top:6px; }
+  svg { display:block; }
+
+  /* menu — token-styled preview (actual app uses native Qt menu, see note) */
+  .menuwrap { display:flex; gap:28px; align-items:flex-start; }
+  .menu { width:300px; background:#1E1E24; border:1px solid #2E2E36; border-radius:8px;
+          padding:6px; font-size:13px; box-shadow:0 12px 40px rgba(0,0,0,.5); }
+  .mi { padding:8px 12px; border-radius:5px; display:flex; align-items:center; gap:10px; }
+  .mi.disabled { color:#9A9AA6; }
+  .mi.hover { background:#2E2E36; }
+  .mi .kbd { margin-left:auto; font-size:11px; color:#9A9AA6; }
+  .sep { height:1px; background:#2E2E36; margin:5px 8px; }
+  .checkmark { width:14px; text-align:center; color:#4FD1B0; flex:none; }
+  .menunote { flex:1; font-size:12px; color:#9A9AA6; line-height:1.8; }
+  .menunote b { color:#ECECF1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Parrotype · Design Kit · Components</div>
+  <h1>Трей: иконка-состояние и меню</h1>
+  <div class="sub">Иконка трея = индикатор состояния. Рендер из канона <span class="mono">assets/logo.svg</span> в рантайме; код: <span class="mono">shells/tray/icons.py</span>, <span class="mono">app.py</span>.</div>
+
+  <h2>Состояния иконки</h2>
+  <div class="iconrow">
+    <div class="iconcell">
+      <div class="statename">idle — готов</div>
+      <div class="duo">
+        <div>
+          <svg width="32" height="32" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+            <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
+            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+          </svg>
+          <div class="szcap mono">32</div>
+        </div>
+        <div>
+          <svg width="16" height="16" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+          </svg>
+          <div class="szcap mono">16</div>
+        </div>
+      </div>
+      <div class="statedesc">Канон на 32px; на 16px — упрощение: светлый толстый контур, без глаза.</div>
+    </div>
+
+    <div class="iconcell">
+      <div class="statename">rec — идёт запись</div>
+      <div class="duo">
+        <div>
+          <svg width="32" height="32" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#4FD1B0" stroke-width="3"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+            <circle cx="56" cy="50" r="5" fill="#ECECF1"/>
+            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+            <circle cx="78" cy="18" r="16" fill="#FF5C5C"/>
+          </svg>
+          <div class="szcap mono">32</div>
+        </div>
+        <div>
+          <svg width="16" height="16" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#4FD1B0"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#4FD1B0"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#4FD1B0"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#ECECF1" stroke-width="6"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#4FD1B0"/>
+            <circle cx="78" cy="18" r="16" fill="#FF5C5C"/>
+          </svg>
+          <div class="szcap mono">16</div>
+        </div>
+      </div>
+      <div class="statedesc">Красный бейдж <span class="mono">#FF5C5C</span> в правом верхнем углу (r ≈ 0.17 × size).</div>
+    </div>
+
+    <div class="iconcell">
+      <div class="statename">paused — хоткей заглушен</div>
+      <div class="duo">
+        <div>
+          <svg width="32" height="32" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#9A9AA6"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#9A9AA6"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#9A9AA6"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#9A9AA6" stroke-width="3"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#9A9AA6"/>
+            <circle cx="56" cy="50" r="5" fill="#9A9AA6"/>
+            <circle cx="57.5" cy="50" r="2.4" fill="#101014"/>
+          </svg>
+          <div class="szcap mono">32</div>
+        </div>
+        <div>
+          <svg width="16" height="16" viewBox="0 0 96 96">
+            <rect x="34" y="14" width="7" height="18" rx="3.5" fill="#9A9AA6"/>
+            <rect x="45" y="6"  width="7" height="26" rx="3.5" fill="#9A9AA6"/>
+            <rect x="56" y="16" width="7" height="16" rx="3.5" fill="#9A9AA6"/>
+            <path d="M28 58 C28 40 40 30 52 30 C66 30 76 41 76 55 C76 70 65 82 48 82 L36 82 C31 82 28 78 28 72 Z" fill="#1E1E24" stroke="#9A9AA6" stroke-width="6"/>
+            <path d="M74 48 C84 50 86 58 80 63 C77 66 72 66 69 63 C73 59 74 54 74 48 Z" fill="#9A9AA6"/>
+          </svg>
+          <div class="szcap mono">16</div>
+        </div>
+      </div>
+      <div class="statedesc">Все цвета знака → muted <span class="mono">#9A9AA6</span> (включается паузой в меню или открытыми настройками).</div>
+    </div>
+  </div>
+
+  <h2>Контекст-меню</h2>
+  <div class="menuwrap">
+    <div class="menu">
+      <div class="mi disabled">Готов · large-v3-turbo @ cuda (float16)</div>
+      <div class="sep"></div>
+      <div class="mi">Последняя диктовка → копировать</div>
+      <div class="mi hover"><span class="checkmark">✓</span>Пауза (глушит хоткей)</div>
+      <div class="sep"></div>
+      <div class="mi">Настройки…</div>
+      <div class="mi">История…</div>
+      <div class="sep"></div>
+      <div class="mi">Выход</div>
+    </div>
+    <div class="menunote">
+      Структура и тексты — как в приложении (<span class="mono">app.py:_build_tray</span>).
+      Первая строка — живой статус: состояние · модель · устройство; недоступна для клика.<br><br>
+      <b>Честная пометка:</b> в текущей сборке меню рендерится нативным Qt-стилем Windows,
+      НЕ этим токен-стилем. Превью показывает целевой вид для будущей QSS-стилизации меню.
+    </div>
+  </div>
+</div>
+</body>
+</html>

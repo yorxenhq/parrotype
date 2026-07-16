@@ -1,0 +1,157 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrotype — Components / Overlay pill</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#101014; color:#ECECF1;
+    font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    padding:48px; min-height:100vh;
+  }
+  .wrap { max-width:960px; margin:0 auto; }
+  .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#9A9AA6; margin-bottom:8px; }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; }
+  .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
+  .mono { font-family:"Cascadia Mono","Consolas",monospace; }
+
+  .state { display:flex; align-items:center; gap:28px; padding:22px 0; border-bottom:1px solid #2E2E36; }
+  .state:last-of-type { border-bottom:none; }
+  .label { width:220px; flex:none; }
+  .label .name { font-size:14px; font-weight:600; }
+  .label .desc { font-size:12px; color:#9A9AA6; margin-top:4px; line-height:1.55; }
+  .stage { flex:1; background:
+      repeating-conic-gradient(#15151A 0% 25%, #121217 0% 50%) 0 0/24px 24px; /* desktop hint under translucent pill */
+      border:1px solid #2E2E36; border-radius:12px; padding:26px 0; display:flex; justify-content:center; }
+
+  /* the pill — geometry verbatim from shells/tray/overlay.py */
+  .pill {
+    height:44px; border-radius:22px;
+    background:rgba(23,23,28,.88);            /* #17171C, alpha 0xE0 */
+    display:inline-flex; align-items:center;
+    padding:0 16px; gap:0; font-size:13.5px; white-space:nowrap;
+  }
+  .rec-dot { width:10px; height:10px; border-radius:50%; background:#FF5C5C; flex:none; }
+  .rec-dot.pulse { animation:pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+
+  .wave { display:flex; align-items:center; gap:2px; height:24px; margin-left:10px; }
+  .wave i { width:3px; border-radius:1.5px; background:#4FD1B0; display:block; }
+
+  .timer { font-family:"Cascadia Mono","Consolas",monospace; font-size:13px; margin-left:10px; }
+  .hint { color:#9A9AA6; margin-left:12px; }
+
+  .spinner { width:14px; height:14px; border-radius:50%; flex:none;
+             border:2px solid transparent; border-top-color:#4FD1B0; border-right-color:#4FD1B0;
+             animation:spin 1.1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .check { flex:none; width:14px; height:14px; }
+  .warn { color:#FFB020; font-size:14px; flex:none; }
+  .text { margin-left:10px; }
+
+  .rulebox { background:#17171C; border:1px solid #2E2E36; border-radius:12px; padding:20px 24px;
+             font-size:13px; color:#9A9AA6; line-height:1.8; margin-top:28px; }
+  .rulebox b { color:#ECECF1; font-weight:600; }
+  h2 { font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+       color:#9A9AA6; margin:36px 0 4px; padding-top:24px; border-top:1px solid #2E2E36; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Parrotype · Design Kit · Components</div>
+  <h1>Оверлей-пилюля состояния</h1>
+  <div class="sub">Главный интерфейс продукта: низ-центр активного монитора, над таскбаром. Высота 44px, ширина по контенту, фокус не крадёт, клики пропускает сквозь. Код: <span class="mono">shells/tray/overlay.py</span>.</div>
+
+  <div class="state">
+    <div class="label">
+      <div class="name">Слушаю · push-to-talk</div>
+      <div class="desc">Rec-точка, live-waveform с микрофона (RMS, 14 баров), моно-таймер, подсказка muted.</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <span class="rec-dot"></span>
+        <span class="wave">
+          <i style="height:6px"></i><i style="height:14px"></i><i style="height:22px"></i><i style="height:16px"></i>
+          <i style="height:9px"></i><i style="height:12px"></i><i style="height:18px"></i><i style="height:8px"></i>
+          <i style="height:14px"></i><i style="height:20px"></i><i style="height:11px"></i><i style="height:7px"></i>
+          <i style="height:15px"></i><i style="height:10px"></i>
+        </span>
+        <span class="timer">0:07</span>
+        <span class="hint">RU · отпусти — вставлю</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state">
+    <div class="label">
+      <div class="name">Слушаю · toggle</div>
+      <div class="desc">Rec-точка пульсирует; подсказка меняется. Таймер ≥ 90с переходит на accent — напоминание, не обрыв.</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <span class="rec-dot pulse"></span>
+        <span class="wave">
+          <i style="height:10px"></i><i style="height:18px"></i><i style="height:8px"></i><i style="height:14px"></i>
+          <i style="height:22px"></i><i style="height:12px"></i><i style="height:6px"></i><i style="height:16px"></i>
+          <i style="height:9px"></i><i style="height:13px"></i><i style="height:19px"></i><i style="height:11px"></i>
+          <i style="height:7px"></i><i style="height:15px"></i>
+        </span>
+        <span class="timer" style="color:#4FD1B0;">1:31</span>
+        <span class="hint">AUTO · хоткей — стоп</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state">
+    <div class="label">
+      <div class="name">Распознаю</div>
+      <div class="desc">Спиннер-дуга accent. Обычно живёт &lt;1с (large-v3-turbo на GPU).</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <span class="spinner"></span>
+        <span class="text">распознаю…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state">
+    <div class="label">
+      <div class="name">Вставлено</div>
+      <div class="desc">Галка accent + превью первых слов (обрез 32 симв.). Flash 800ms → fade 400ms.</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <svg class="check" viewBox="0 0 14 14"><path d="M1 8 L5 12 L13 2" fill="none" stroke="#4FD1B0" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="text">«Привет, собери отчёт по проекту…»</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state">
+    <div class="label">
+      <div class="name">Ошибка</div>
+      <div class="desc">Не исчезает сама; единственное кликабельное состояние — клик открывает лог.</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <span class="warn">⚠</span>
+        <span class="text">не смог вставить — текст в буфере, нажми Ctrl+V</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>Поведение</h2>
+  <div class="rulebox">
+    <b>Позиция:</b> низ-центр активного монитора (по курсору), 24px над таскбаром — не у курсора, чтобы не дёргалась.<br>
+    <b>Фокус:</b> окно никогда не активируется (<span class="mono">WindowDoesNotAcceptFocus + WA_ShowWithoutActivating</span>) — иначе вставка уйдёт не туда.<br>
+    <b>Клики:</b> сквозные (<span class="mono">WindowTransparentForInput</span>) во всех состояниях, кроме ошибки.<br>
+    <b>Esc</b> во время записи = отмена: ничего не вставляем, пилюля гаснет.
+  </div>
+</div>
+</body>
+</html>

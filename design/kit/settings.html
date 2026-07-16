@@ -1,0 +1,88 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrotype — Components / Settings window</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#101014; color:#ECECF1;
+    font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    padding:48px; min-height:100vh;
+  }
+  .wrap { max-width:960px; margin:0 auto; }
+  .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#9A9AA6; margin-bottom:8px; }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; }
+  .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
+  .mono { font-family:"Cascadia Mono","Consolas",monospace; }
+
+  /* window frame 760x500, QSS-accurate */
+  .win { width:760px; height:500px; margin:0 auto; background:#1E1E24; border:1px solid #2E2E36;
+         border-radius:8px; overflow:hidden; display:flex; flex-direction:column;
+         box-shadow:0 24px 80px rgba(0,0,0,.55); font-size:13px; }
+  .titlebar { height:34px; background:#191920; border-bottom:1px solid #2E2E36; display:flex; align-items:center;
+              padding:0 14px; font-size:12px; color:#9A9AA6; flex:none; }
+  .winbtns { margin-left:auto; display:flex; gap:18px; font-size:11px; color:#9A9AA6; }
+  .body { flex:1; display:flex; min-height:0; }
+
+  .sidebar { width:160px; flex:none; background:#191920; border-right:1px solid #2E2E36; padding-top:12px; }
+  .side { padding:10px 16px; color:#ECECF1; }
+  .side.sel { background:#2E2E36; color:#4FD1B0; border-left:2px solid #4FD1B0; padding-left:14px; }
+
+  .page { flex:1; padding:24px; }
+  .row { display:flex; align-items:center; margin-bottom:12px; gap:12px; }
+  .row label { width:170px; flex:none; text-align:right; color:#ECECF1; }
+  .field { background:#17171C; border:1px solid #2E2E36; border-radius:6px; padding:6px 10px; min-width:250px; }
+  .combo { display:flex; align-items:center; }
+  .combo .arrow { margin-left:auto; color:#9A9AA6; font-size:10px; padding-left:14px; }
+  .check { display:flex; align-items:center; gap:8px; min-width:250px; }
+  .box { width:16px; height:16px; border:1px solid #2E2E36; border-radius:3px; background:#17171C;
+         display:flex; align-items:center; justify-content:center; color:#4FD1B0; font-size:12px; }
+
+  .notes { max-width:760px; margin:28px auto 0; background:#17171C; border:1px solid #2E2E36; border-radius:12px;
+           padding:20px 24px; font-size:13px; color:#9A9AA6; line-height:1.8; }
+  .notes b { color:#ECECF1; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Parrotype · Design Kit · Components</div>
+  <h1>Окно настроек</h1>
+  <div class="sub">Одно окно 760×500, сайдбар слева. Открывается редко — вторичная поверхность. Превью повторяет фактический QSS (<span class="mono">shells/tray/settings.py</span>), вкладка «Общее».</div>
+
+  <div class="win">
+    <div class="titlebar">Parrotype — настройки <span class="winbtns"><span>—</span><span>▢</span><span>✕</span></span></div>
+    <div class="body">
+      <div class="sidebar">
+        <div class="side sel">Общее</div>
+        <div class="side">Модель</div>
+        <div class="side">Словарь</div>
+        <div class="side">История</div>
+        <div class="side">О программе</div>
+      </div>
+      <div class="page">
+        <div class="row"><label>Хоткей (удерживать):</label><div class="field mono">ctrl+alt</div></div>
+        <div class="row"><label>Хоткей (вкл/выкл):</label><div class="field mono">ctrl+shift+space</div></div>
+        <div class="row"><label>Язык:</label><div class="field combo">Auto<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Способ вставки:</label><div class="field combo">Печать (быстро, не трогает буфер)<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Микрофон:</label><div class="field combo">Системный по умолчанию<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Автозапуск:</label><div class="check"><span class="box">✓</span>Запускать вместе с Windows</div></div>
+        <div class="row"><label>Звук:</label><div class="check"><span class="box">✓</span>Тихий тик старта/стопа записи</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <b>Соответствие коду:</b> сайдбар <span class="mono">#191920</span>, активный пункт — фон
+    <span class="mono">#2E2E36</span> + accent-текст + 2px accent-кайма слева; поля
+    <span class="mono">#17171C</span> с рамкой <span class="mono">#2E2E36</span>, радиус 6px. Состав строк
+    вкладки «Общее» — фактический (включая «Способ вставки» из итерации 2).<br>
+    <b>Отличия от живого окна:</b> тайтлбар и чекбоксы здесь нарисованы токен-стилем — в приложении они
+    нативные Windows/Qt (Fusion); комбобоксы Qt имеют свою стрелку и паддинги. Тёмная тема применяется только при
+    тёмной системной теме (dark-first, светлая — системный Qt-стиль без кастомного QSS).
+  </div>
+</div>
+</body>
+</html>

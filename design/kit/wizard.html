@@ -1,0 +1,144 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrotype — Components / First-run wizard (CONCEPT)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#101014; color:#ECECF1;
+    font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    padding:48px; min-height:100vh;
+  }
+  .wrap { max-width:1080px; margin:0 auto; }
+  .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:#9A9AA6; margin-bottom:8px; }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:12px; }
+  .badge { font-size:10px; letter-spacing:.14em; font-weight:700; color:#101014; background:#FFB020;
+           border-radius:4px; padding:3px 8px; }
+  .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
+  .mono { font-family:"Cascadia Mono","Consolas",monospace; }
+
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .card { background:#1E1E24; border:1px solid #2E2E36; border-radius:12px; overflow:hidden;
+          display:flex; flex-direction:column; min-height:420px; }
+  .card .head { padding:18px 20px 0; }
+  .stepno { font-size:11px; color:#4FD1B0; letter-spacing:.14em; font-weight:600; }
+  .card h3 { font-size:16px; font-weight:600; margin:6px 0 4px; }
+  .card .desc { font-size:12px; color:#9A9AA6; line-height:1.6; }
+  .card .stage { flex:1; padding:20px; display:flex; flex-direction:column; gap:12px; justify-content:center; }
+  .card .foot { padding:14px 20px; border-top:1px solid #2E2E36; display:flex; align-items:center; }
+  .dots { display:flex; gap:6px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:#2E2E36; }
+  .dot.on { background:#4FD1B0; }
+  .btn { margin-left:auto; background:#4FD1B0; color:#101014; font-weight:600; font-size:13px;
+         border-radius:6px; padding:8px 20px; }
+  .btn.ghost { background:#2E2E36; color:#ECECF1; font-weight:400; }
+
+  .field { background:#17171C; border:1px solid #2E2E36; border-radius:6px; padding:8px 12px; font-size:13px;
+           display:flex; align-items:center; }
+  .field .arrow { margin-left:auto; color:#9A9AA6; font-size:10px; }
+  .field.sel { border-color:#4FD1B0; }
+  .cap { font-size:11px; color:#9A9AA6; line-height:1.6; }
+
+  .wavebox { background:#17171C; border:1px solid #2E2E36; border-radius:6px; padding:14px;
+             display:flex; align-items:center; gap:2px; height:64px; }
+  .wavebox i { width:3px; border-radius:1.5px; background:#4FD1B0; display:block; }
+
+  .modelrow { display:flex; align-items:center; gap:10px; background:#17171C; border:1px solid #2E2E36;
+              border-radius:6px; padding:10px 12px; font-size:13px; }
+  .modelrow.rec { border-color:#4FD1B0; }
+  .modelrow .tag { margin-left:auto; font-size:10px; color:#4FD1B0; letter-spacing:.08em; }
+  .modelrow .lat { font-size:11px; color:#9A9AA6; }
+  .progress { height:6px; border-radius:3px; background:#2E2E36; overflow:hidden; }
+  .progress i { display:block; height:100%; width:62%; background:#4FD1B0; border-radius:3px; }
+
+  .hotkeycap { background:#17171C; border:1px dashed #4FD1B0; border-radius:6px; padding:16px;
+               text-align:center; }
+  .hotkeycap .keys { font-family:"Cascadia Mono","Consolas",monospace; font-size:18px; color:#4FD1B0; }
+  .trainbox { background:#17171C; border:1px solid #2E2E36; border-radius:6px; padding:12px; font-size:13px;
+              color:#9A9AA6; min-height:64px; }
+  .trainbox b { color:#ECECF1; font-weight:400; }
+  .pillmini { display:inline-flex; align-items:center; gap:8px; height:30px; border-radius:15px;
+              background:rgba(23,23,28,.88); border:1px solid #2E2E36; padding:0 12px; font-size:11px; }
+  .recdot { width:7px; height:7px; border-radius:50%; background:#FF5C5C; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Parrotype · Design Kit · Components</div>
+  <h1>Мастер первого запуска <span class="badge">CONCEPT</span></h1>
+  <div class="sub">Лицо v1.5 для второго пользователя: «поставил и работает». В коде ещё НЕ существует — предложение по токенам, 3 шага из spec §3.5. Окно ~560×460, без брендовых заставок: маскот не появляется, мастер сразу о деле.</div>
+
+  <div class="steps">
+    <!-- step 1 -->
+    <div class="card">
+      <div class="head">
+        <div class="stepno">ШАГ 1 · 3</div>
+        <h3>Микрофон</h3>
+        <div class="desc">Выбор устройства + живой waveform: видно, что микрофон слышит, до первой диктовки. Виртуальные устройства скрыты.</div>
+      </div>
+      <div class="stage">
+        <div class="field sel">Microphone Array (Realtek)<span class="arrow">▼</span></div>
+        <div class="cap">Скажи что-нибудь — полоски должны двигаться:</div>
+        <div class="wavebox">
+          <i style="height:8px"></i><i style="height:16px"></i><i style="height:28px"></i><i style="height:20px"></i>
+          <i style="height:10px"></i><i style="height:14px"></i><i style="height:24px"></i><i style="height:12px"></i>
+          <i style="height:18px"></i><i style="height:30px"></i><i style="height:15px"></i><i style="height:8px"></i>
+          <i style="height:22px"></i><i style="height:12px"></i><i style="height:6px"></i><i style="height:17px"></i>
+          <i style="height:26px"></i><i style="height:11px"></i><i style="height:7px"></i><i style="height:14px"></i>
+        </div>
+        <div class="cap" style="color:#4FD1B0;">✓ слышу вас — уровень хороший</div>
+      </div>
+      <div class="foot">
+        <div class="dots"><span class="dot on"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="btn">Дальше</div>
+      </div>
+    </div>
+
+    <!-- step 2 -->
+    <div class="card">
+      <div class="head">
+        <div class="stepno">ШАГ 2 · 3</div>
+        <h3>Модель</h3>
+        <div class="desc">Авто-замер железа уже сделан — мастер сразу рекомендует. Скачивание с прогрессом, без тишины.</div>
+      </div>
+      <div class="stage">
+        <div class="modelrow rec">large-v3-turbo<span class="lat">&nbsp;· ~0.8с на фразу</span><span class="tag">РЕКОМЕНДУЕМ · GPU</span></div>
+        <div class="modelrow">medium<span class="lat">&nbsp;· ~0.9с, меньше памяти</span></div>
+        <div class="modelrow">small<span class="lat">&nbsp;· для работы без GPU</span></div>
+        <div class="cap">Скачиваю модель — 980 МБ из 1.58 ГБ…</div>
+        <div class="progress"><i></i></div>
+      </div>
+      <div class="foot">
+        <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot"></span></div>
+        <div class="btn ghost">Дальше</div>
+      </div>
+    </div>
+
+    <!-- step 3 -->
+    <div class="card">
+      <div class="head">
+        <div class="stepno">ШАГ 3 · 3</div>
+        <h3>Хоткей и проба</h3>
+        <div class="desc">Захват комбинации + тренировочная диктовка прямо в поле мастера — первый успех до выхода из мастера.</div>
+      </div>
+      <div class="stage">
+        <div class="hotkeycap">
+          <div class="cap" style="margin-bottom:6px;">Зажми и держи, чтобы говорить:</div>
+          <div class="keys">Ctrl + Alt</div>
+        </div>
+        <div class="cap">Попробуй продиктовать сюда:</div>
+        <div class="trainbox"><b>Привет, это Parrotype — проверка связи.</b><span style="opacity:.6;">|</span></div>
+        <div style="text-align:center;"><span class="pillmini"><span class="recdot"></span>слушаю · отпусти — вставлю</span></div>
+      </div>
+      <div class="foot">
+        <div class="dots"><span class="dot on"></span><span class="dot on"></span><span class="dot on"></span></div>
+        <div class="btn">Готово</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

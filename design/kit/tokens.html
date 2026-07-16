@@ -1,0 +1,137 @@
+<!-- @dsCard group="Foundations" -->
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parrotype — Foundations / Tokens</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#101014; color:#ECECF1;
+    font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+    padding:48px; min-height:100vh;
+  }
+  .wrap { max-width:960px; margin:0 auto; }
+  .eyebrow {
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:#9A9AA6; margin-bottom:8px;
+  }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; }
+  .sub { color:#9A9AA6; font-size:14px; margin-bottom:36px; }
+  h2 {
+    font-size:13px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    color:#9A9AA6; margin:36px 0 14px; padding-top:24px; border-top:1px solid #2E2E36;
+  }
+  .mono { font-family:"Cascadia Mono","Consolas",monospace; }
+
+  /* palette */
+  .swatches { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; }
+  .swatch { background:#17171C; border:1px solid #2E2E36; border-radius:12px; overflow:hidden; }
+  .swatch .chip { height:64px; }
+  .swatch .meta { padding:10px 12px; }
+  .swatch .name { font-size:13px; font-weight:600; }
+  .swatch .val { font-size:11px; color:#9A9AA6; margin-top:2px; }
+  .swatch .use { font-size:11px; color:#9A9AA6; margin-top:6px; line-height:1.45; }
+
+  /* type */
+  .typerow { display:flex; align-items:baseline; gap:20px; padding:14px 0; border-bottom:1px solid #2E2E36; }
+  .typerow:last-child { border-bottom:none; }
+  .typerow .spec { width:260px; flex:none; font-size:11px; color:#9A9AA6; line-height:1.5; }
+  .panel { background:#17171C; border:1px solid #2E2E36; border-radius:12px; padding:8px 20px; }
+
+  /* radii */
+  .radii { display:flex; gap:16px; flex-wrap:wrap; }
+  .rad { background:#1E1E24; border:1px solid #2E2E36; display:flex; align-items:center; justify-content:center;
+         color:#9A9AA6; font-size:11px; }
+  .radcap { text-align:center; font-size:11px; color:#9A9AA6; margin-top:8px; line-height:1.5; }
+
+  /* motion */
+  table { border-collapse:collapse; width:100%; font-size:13px; }
+  th, td { text-align:left; padding:10px 14px; border-bottom:1px solid #2E2E36; }
+  th { color:#9A9AA6; font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }
+  td.mono { font-size:12px; color:#4FD1B0; }
+  .note { font-size:12px; color:#9A9AA6; margin-top:12px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Parrotype · Design Kit · Foundations</div>
+  <h1>Tokens</h1>
+  <div class="sub">Мини-система «тихого инструмента»: dark-first, mint-accent, без брендового шума внутри UI. Канон — spec §3.5; код — <span class="mono">shells/tray/theme.py</span>.</div>
+
+  <h2>Палитра</h2>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#101014; border-bottom:1px solid #2E2E36;"></div>
+      <div class="meta"><div class="name">bg / page</div><div class="val mono">#101014</div>
+      <div class="use">Фон витрин и глубоких поверхностей</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#17171C; border-bottom:1px solid #2E2E36;"></div>
+      <div class="meta"><div class="name">bg-overlay</div><div class="val mono">#17171C · α 88%</div>
+      <div class="use">Пилюля-оверлей (полупрозрачная), поля ввода</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#1E1E24; border-bottom:1px solid #2E2E36;"></div>
+      <div class="meta"><div class="name">surface</div><div class="val mono">#1E1E24</div>
+      <div class="use">Окно настроек, карточки</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#ECECF1;"></div>
+      <div class="meta"><div class="name">text</div><div class="val mono">#ECECF1</div>
+      <div class="use">Основной текст</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#9A9AA6;"></div>
+      <div class="meta"><div class="name">muted</div><div class="val mono">#9A9AA6</div>
+      <div class="use">Подсказки, вторичный текст, паузы-состояния</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#2E2E36;"></div>
+      <div class="meta"><div class="name">line</div><div class="val mono">#2E2E36</div>
+      <div class="use">Разделители, рамки полей, кнопки</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#4FD1B0;"></div>
+      <div class="meta"><div class="name">accent</div><div class="val mono">#4FD1B0</div>
+      <div class="use">«Готово / активен»: waveform, галка, выделение. Мятный — узнаваемость без крика</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#FF5C5C;"></div>
+      <div class="meta"><div class="name">rec</div><div class="val mono">#FF5C5C</div>
+      <div class="use">ТОЛЬКО точка записи (конвенция «идёт запись») и rec-бейдж трея</div></div></div>
+    <div class="swatch"><div class="chip" style="background:#FFB020;"></div>
+      <div class="meta"><div class="name">warn</div><div class="val mono">#FFB020</div>
+      <div class="use">Значок ⚠ в состоянии ошибки пилюли</div></div></div>
+  </div>
+
+  <h2>Типографика</h2>
+  <div class="panel">
+    <div class="typerow">
+      <div class="spec">UI · Segoe UI Variable<br>fallback: Segoe UI · нативный Win11</div>
+      <div style="font-size:20px;">Ты говоришь — текст появляется. Съешь ещё этих мягких булок.</div>
+    </div>
+    <div class="typerow">
+      <div class="spec">UI muted · 13px<br>подсказки, вторичные строки</div>
+      <div style="font-size:13px; color:#9A9AA6;">RU · отпусти — вставлю &nbsp;·&nbsp; всё работает локально, аудио никуда не отправляется</div>
+    </div>
+    <div class="typerow">
+      <div class="spec">Моно-цифры · Cascadia Mono<br>таймер записи, спеки, значения токенов</div>
+      <div class="mono" style="font-size:20px;">0:07&nbsp;&nbsp;1:32&nbsp;&nbsp;<span style="color:#4FD1B0;">1:31</span>&nbsp;<span style="font-size:11px;color:#9A9AA6;">← ≥90с таймер переходит на accent</span></div>
+    </div>
+  </div>
+
+  <h2>Радиусы</h2>
+  <div class="radii">
+    <div>
+      <div class="rad" style="width:180px; height:44px; border-radius:22px;">height / 2</div>
+      <div class="radcap">Пилюля-оверлей<br><span class="mono">radius = h/2 (44 → 22px)</span></div>
+    </div>
+    <div>
+      <div class="rad" style="width:120px; height:88px; border-radius:12px;">12px</div>
+      <div class="radcap">Карточки, свотчи<br><span class="mono">CARD_RADIUS = 12</span></div>
+    </div>
+    <div>
+      <div class="rad" style="width:120px; height:44px; border-radius:6px;">6px</div>
+      <div class="radcap">Поля ввода, кнопки<br><span class="mono">QSS: border-radius 6</span></div>
+    </div>
+  </div>
+
+  <h2>Движение и звук</h2>
+  <table>
+    <tr><th>Что</th><th>Значение</th><th>Правило</th></tr>
+    <tr><td>Анимации UI</td><td class="mono">150–200ms · ease-out</td><td>Без подпрыгиваний и spring-эффектов</td></tr>
+    <tr><td>Флеш «вставлено»</td><td class="mono">800ms → fade 400ms</td><td>Показали превью — растворились</td></tr>
+    <tr><td>Пульс rec-точки</td><td class="mono">~1.5s цикл</td><td>Только в toggle-режиме (запись без удержания)</td></tr>
+    <tr><td>Тик старта / стопа</td><td class="mono">45ms · 1175 / 880 Hz</td><td>Тихий, синус с огибающей; отключаем в настройках</td></tr>
+  </table>
+  <div class="note">Анти-цели: никаких дашбордов, статистики «слов надиктовано», облачных аккаунтов, туров поверх экрана, брендовых заставок. Инструмент исчезает из внимания — суммарный контакт с UI за диктовку 2–3 секунды.</div>
+</div>
+</body>
+</html>
