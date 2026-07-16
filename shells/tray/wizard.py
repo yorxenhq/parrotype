@@ -27,7 +27,9 @@ from PySide6.QtWidgets import (
 
 from core import Config, Engine, Recorder, list_input_devices
 from core.config import cuda_available, cuda_usable
+from core.sysprobe import summary_line
 from shells.tray import theme
+from shells.tray.gpupanel import GpuOfferPanel
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
 from shells.tray.modelpicker import ModelPicker, machine_options
@@ -225,14 +227,29 @@ class FirstRunWizard(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 22, 24, 12)
         self._page_header(layout, 2, tr("wiz.model.title"), tr("wiz.model.desc"))
+        self._model_layout = layout
+
+        hw = summary_line()
+        if hw:
+            hw_label = QLabel(tr("model.machine", hw=hw))
+            hw_label.setObjectName("muted")
+            hw_label.setWordWrap(True)
+            layout.addWidget(hw_label)
+            layout.addSpacing(6)
 
         has_gpu = cuda_usable()
         gpu_blocked = cuda_available() and not has_gpu   # device present, libs missing
-        options, note = machine_options()
+        options, note = machine_options(self.config.bench_results)
         if gpu_blocked:
-            # GPU detected but CUDA runtime libs are absent (e.g. packaged
-            # CPU-only build): say so honestly instead of a silent fallback.
+            # GPU detected but CUDA runtime libs are absent (packaged
+            # CPU-only build): offer the one-click enable right here.
             note = tr("wiz.model.gpu_missing_libs")
+            self.gpu_panel: GpuOfferPanel | None = GpuOfferPanel()
+            self.gpu_panel.installed.connect(self._on_gpu_installed)
+            layout.addWidget(self.gpu_panel)
+            layout.addSpacing(8)
+        else:
+            self.gpu_panel = None
         default = "large-v3-turbo" if has_gpu else "small"
         selected = (
             self.config.model_size
@@ -376,6 +393,19 @@ class FirstRunWizard(QDialog):
             self.mic_status.setStyleSheet(f"color: {theme.ACCENT};")
 
     # -- step 2: model -----------------------------------------------------------
+
+    def _on_gpu_installed(self) -> None:
+        """CUDA runtime just landed: re-rank the models for the GPU."""
+        options, note = machine_options(self.config.bench_results)
+        old = self.model_picker
+        new = ModelPicker(options, "large-v3-turbo", note)
+        new.changed.connect(self._on_model_changed)
+        index = self._model_layout.indexOf(old)
+        self._model_layout.insertWidget(index, new)
+        self._model_layout.removeWidget(old)
+        old.deleteLater()
+        self.model_picker = new
+        self._on_model_changed()   # persist the new default + start its download
 
     def _on_model_changed(self) -> None:
         self.config.model_size = self.model_picker.current

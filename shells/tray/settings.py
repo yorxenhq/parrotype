@@ -40,9 +40,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core import APP_VERSION, Config, Engine, History, Recorder, list_input_devices
+from core import APP_VERSION, Config, History, Recorder, list_input_devices
+from core.config import cuda_available, cuda_usable
 from core.history import HistoryEntry
+from core.sttclient import EngineCrashed, IsolatedEngine
+from core.sysprobe import summary_line
 from shells.tray import icons, theme, updates
+from shells.tray.gpupanel import GpuOfferPanel
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
 from shells.tray.modelpicker import SIZES, ModelOption, ModelPicker, machine_options
@@ -452,19 +456,26 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
+        self._model_page_layout = layout
 
-        options, note = machine_options()
-        if self.config.model_size not in {o.name for o in options}:
-            # Hand-picked model outside the recommended trio (e.g. large-v3):
-            # show it as a fourth card so the selection stays honest.
-            size_n, size_unit = SIZES.get(self.config.model_size, ("—", "gb"))
-            options = [
-                *options,
-                ModelOption(self.config.model_size, "model.desc.other",
-                            "—", size_n, size_unit),
-            ]
-        self.model_picker = ModelPicker(options, self.config.model_size, note)
-        self.model_picker.changed.connect(self._save_model)
+        hw = summary_line()
+        if hw:
+            hw_label = QLabel(tr("model.machine", hw=hw))
+            hw_label.setObjectName("muted")
+            hw_label.setWordWrap(True)
+            layout.addWidget(hw_label)
+
+        # NVIDIA present but the CUDA runtime is not installed (the package
+        # ships CPU-only): offer the one-click enable right where the user
+        # is choosing speed/quality.
+        if cuda_available() and not cuda_usable():
+            self.gpu_panel: GpuOfferPanel | None = GpuOfferPanel()
+            self.gpu_panel.installed.connect(self._on_gpu_installed)
+            layout.addWidget(self.gpu_panel)
+        else:
+            self.gpu_panel = None
+
+        self.model_picker = self._make_model_picker()
         layout.addWidget(self.model_picker)
 
         form = QFormLayout()
@@ -795,6 +806,39 @@ class SettingsDialog(QDialog):
         self.clear_confirm.hide()
         self.clear_btn.show()
 
+    # -- model picker plumbing -------------------------------------------------
+
+    def _make_model_picker(self) -> ModelPicker:
+        options, note = machine_options(self.config.bench_results)
+        if self.config.model_size not in {o.name for o in options}:
+            # Hand-picked model outside the recommended trio (e.g. large-v3):
+            # show it as a fourth card so the selection stays honest.
+            size_n, size_unit = SIZES.get(self.config.model_size, ("—", "gb"))
+            options = [
+                *options,
+                ModelOption(self.config.model_size, "model.desc.other",
+                            "—", size_n, size_unit),
+            ]
+        picker = ModelPicker(options, self.config.model_size, note)
+        picker.changed.connect(self._save_model)
+        return picker
+
+    def _rebuild_model_picker(self) -> None:
+        """Swap the picker in place (bench numbers / GPU state changed)."""
+        old = self.model_picker
+        new = self._make_model_picker()
+        index = self._model_page_layout.indexOf(old)
+        self._model_page_layout.insertWidget(index, new)
+        self._model_page_layout.removeWidget(old)
+        old.deleteLater()
+        self.model_picker = new
+
+    def _on_gpu_installed(self) -> None:
+        # Probes were re-primed by cudasetup; the picker set changes to the
+        # GPU trio and config_changed lets the app restart its worker.
+        self._rebuild_model_picker()
+        self._save_model()
+
     # -- latency test --------------------------------------------------------------
 
     def _run_latency_test(self) -> None:
@@ -808,16 +852,30 @@ class SettingsDialog(QDialog):
         device = self.device_combo.currentData()
 
         def worker() -> None:
+            # Bench runs in its OWN worker process (crash-safe): a model
+            # that access-violates on this machine yields an honest
+            # "unstable" verdict instead of taking the app down.
+            from datetime import datetime, timezone
+
+            overrides = {"model_size": model, "device": device,
+                         "compute_type": "auto"}
+            cfg = Config.load()
+            for key, value in overrides.items():
+                setattr(cfg, key, value)
+            expected_dev, _ = cfg.resolve_device()
+            engine = IsolatedEngine(cfg, overrides=overrides)
+            stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
             try:
-                cfg = Config.load()
-                cfg.model_size = model
-                cfg.device = device
-                cfg.compute_type = "auto"
-                engine = Engine(cfg)
-                engine.load_model()
-                engine.transcribe(str(_TEST_WAV))            # warm-up
+                engine.ensure_model()
+                engine.transcribe(str(_TEST_WAV))            # warm-up run
                 result = engine.transcribe(str(_TEST_WAV))   # measured run
-                dev, _compute = cfg.resolve_device()
+                dev = engine.actual_device or expected_dev
+                self.config.bench_results[f"{model}|{dev}"] = {
+                    "latency": round(result.latency_seconds, 2),
+                    "audio": round(result.audio_seconds, 1),
+                    "at": stamp,
+                }
+                self.config.save()
                 msg = tr(
                     "set.latency_result",
                     model=model, dev="GPU" if dev == "cuda" else "CPU",
@@ -830,9 +888,19 @@ class SettingsDialog(QDialog):
                     msg += tr("set.latency_ok")
                 else:
                     msg += tr("set.latency_slow")
+            except EngineCrashed:
+                log.exception("Latency test: config is unstable on this machine")
+                dev = engine.actual_device or expected_dev
+                self.config.bench_results[f"{model}|{dev}"] = {
+                    "unstable": True, "at": stamp,
+                }
+                self.config.save()
+                msg = tr("set.latency_unstable", model=model)
             except Exception as exc:
                 log.exception("Latency test failed")
                 msg = tr("set.latency_error", err=exc)
+            finally:
+                engine.shutdown()
             self._latency_done.emit(msg)
 
         threading.Thread(target=worker, daemon=True).start()
@@ -840,6 +908,7 @@ class SettingsDialog(QDialog):
     def _show_latency_result(self, msg: str) -> None:
         self.latency_label.setText(msg)
         self.latency_btn.setEnabled(True)
+        self._rebuild_model_picker()   # show the fresh measured number
 
     # -- style ------------------------------------------------------------------------
 

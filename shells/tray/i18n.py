@@ -129,6 +129,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": " — slow; pick a smaller model.",
     },
     "set.latency_error": {"ru": "Ошибка теста: {err}", "en": "Test failed: {err}"},
+    "set.latency_unstable": {
+        "ru": "{model} упала на этой машине во время теста — приложение не пострадало. "
+              "Модель отмечена как нестабильная: возьми другую или включи GPU.",
+        "en": "{model} crashed on this machine during the test — the app itself is fine. "
+              "It is now marked unstable: pick another model or enable the GPU.",
+    },
     "set.latency_no_wav": {
         "ru": "Тестовый файл assets/latency_test.wav не найден.",
         "en": "Test file assets/latency_test.wav is missing.",
@@ -189,6 +195,15 @@ _STRINGS: dict[str, dict[str, str]] = {
     # -- model picker ---------------------------------------------------------
     "model.rec": {"ru": "рекомендуем", "en": "recommended"},
     "model.meta.speed": {"ru": "~{sec} с на фразу", "en": "~{sec}s per phrase"},
+    "model.meta.speed_measured": {
+        "ru": "{sec} с — замер на этой машине",
+        "en": "{sec}s — measured on this machine",
+    },
+    "model.meta.unstable": {
+        "ru": "падала на этой машине",
+        "en": "crashed on this machine",
+    },
+    "model.machine": {"ru": "Эта машина: {hw}", "en": "This machine: {hw}"},
     "model.meta.size_mb": {"ru": "скачать ~{n} МБ", "en": "~{n} MB download"},
     "model.meta.size_gb": {"ru": "скачать ~{n} ГБ", "en": "~{n} GB download"},
     "model.desc.gpu.turbo": {
@@ -226,6 +241,29 @@ _STRINGS: dict[str, dict[str, str]] = {
     "model.device_note.gpu": {
         "ru": "Распознавать будет видеокарта NVIDIA — самый быстрый вариант.",
         "en": "Recognition runs on your NVIDIA graphics card — the fastest option.",
+    },
+
+    # -- GPU runtime on-demand -------------------------------------------------
+    "gpu.offer_note": {
+        "ru": "В компьютере есть видеокарта NVIDIA. Один раз скачаем её библиотеки — "
+              "и диктовка станет заметно быстрее и точнее (лучшие модели за доли секунды).",
+        "en": "This computer has an NVIDIA graphics card. A one-time library download "
+              "makes dictation much faster and more accurate (the best models in a fraction of a second).",
+    },
+    "gpu.offer_btn": {"ru": "Включить GPU", "en": "Enable GPU"},
+    "gpu.offer_btn_size": {
+        "ru": "Включить GPU — скачать {size} ГБ",
+        "en": "Enable GPU — {size} GB download",
+    },
+    "gpu.downloading": {"ru": "Скачиваю GPU-библиотеки — {pct}%", "en": "Downloading GPU libraries — {pct}%"},
+    "gpu.installing": {"ru": "Подключаю GPU…", "en": "Setting up the GPU…"},
+    "gpu.done": {
+        "ru": "GPU включён. Модели ниже пересчитаны под видеокарту.",
+        "en": "GPU enabled. The models below are re-ranked for your graphics card.",
+    },
+    "gpu.failed": {
+        "ru": "Не получилось подключить GPU: {err}. Всё продолжит работать на процессоре.",
+        "en": "Could not set up the GPU: {err}. Everything keeps working on the processor.",
     },
 
     # -- wizard --------------------------------------------------------------

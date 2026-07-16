@@ -25,6 +25,8 @@ class ModelOption:
     size_n: str        # "1.6"
     size_unit: str     # "gb" | "mb"
     recommended: bool = False
+    measured: bool = False    # sec is a real measurement on THIS machine
+    unstable: bool = False    # the latency test crashed on this machine
 
 
 GPU_OPTIONS = [
@@ -50,11 +52,33 @@ SIZES: dict[str, tuple[str, str]] = {
 }
 
 
-def machine_options() -> tuple[list[ModelOption], str]:
-    """The recommended option set + the one device note for this machine."""
+def machine_options(bench: dict | None = None) -> tuple[list[ModelOption], str]:
+    """The recommended option set + the one device note for this machine.
+
+    bench — config.bench_results: hardcoded reference speeds are replaced
+    by real measurements from THIS machine wherever the latency test ran.
+    """
     if cuda_usable():
-        return GPU_OPTIONS, tr("model.device_note.gpu")
-    return CPU_OPTIONS, tr("model.device_note.cpu")
+        options, note, device = GPU_OPTIONS, tr("model.device_note.gpu"), "cuda"
+    else:
+        options, note, device = CPU_OPTIONS, tr("model.device_note.cpu"), "cpu"
+    if bench:
+        options = [_apply_bench(opt, bench.get(f"{opt.name}|{device}"))
+                   for opt in options]
+    return options, note
+
+
+def _apply_bench(opt: ModelOption, entry: dict | None) -> ModelOption:
+    from dataclasses import replace
+
+    if not entry:
+        return opt
+    if entry.get("unstable"):
+        return replace(opt, unstable=True)
+    latency = entry.get("latency")
+    if latency is None:
+        return opt
+    return replace(opt, sec=f"{float(latency):.1f}", measured=True)
 
 
 class ModelCard(QFrame):
@@ -90,8 +114,11 @@ class ModelCard(QFrame):
         row.addLayout(left, 1)
 
         lines = []
-        if opt.sec != "—":
-            lines.append(tr("model.meta.speed", sec=opt.sec))
+        if opt.unstable:
+            lines.append(tr("model.meta.unstable"))
+        elif opt.sec != "—":
+            key = "model.meta.speed_measured" if opt.measured else "model.meta.speed"
+            lines.append(tr(key, sec=opt.sec))
         if opt.size_n != "—":
             lines.append(tr(f"model.meta.size_{opt.size_unit}", n=opt.size_n))
         meta = QLabel("\n".join(lines))

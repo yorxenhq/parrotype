@@ -50,6 +50,11 @@ def _register_cuda_dlls() -> None:
                 # ctranslate2 resolves cuBLAS/cuDNN with a plain LoadLibrary,
                 # which ignores add_dll_directory dirs — PATH is also needed.
                 os.environ["PATH"] = str(bin_dir) + os.pathsep + os.environ.get("PATH", "")
+    # Runtime downloaded on demand into %APPDATA%/Parrotype/cuda/bin
+    # (packaged build ships CPU-only; see core.cudasetup).
+    from core.cudasetup import register_runtime_dir
+
+    register_runtime_dir()
 
 
 _register_cuda_dlls()

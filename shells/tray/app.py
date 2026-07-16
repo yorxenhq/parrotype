@@ -15,6 +15,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from core import Config, Engine, History, Recorder
 from core.audio import pick_input_device, probe_peak
 from core.config import app_data_dir
+from core.sttclient import IsolatedEngine
 from shells.tray import autostart, micguard, singleinstance, sounds, theme, updates
 from shells.tray.hotkeys import HotkeyManager
 from shells.tray.i18n import current_language, set_language, tr
@@ -69,7 +70,13 @@ class TrayApp(QObject):
         self.config = Config.load()
         set_language(self.config.ui_language)
         self.history = History(limit=self.config.history_limit)
-        self.engine = Engine(self.config)
+        # Decode runs in an isolated worker process: a native crash in the
+        # ctranslate2 kernels restarts the worker instead of killing the app.
+        # PARROTYPE_INPROC=1 forces the old in-process engine (debugging).
+        if os.environ.get("PARROTYPE_INPROC"):
+            self.engine: Engine | IsolatedEngine = Engine(self.config)
+        else:
+            self.engine = IsolatedEngine(self.config)
         self._engine_lock = threading.Lock()
 
         self.bridge = _Bridge()
@@ -183,7 +190,9 @@ class TrayApp(QObject):
 
     def _update_status(self) -> None:
         device, _compute = self.config.resolve_device()
-        dev_label = "GPU" if device == "cuda" else "CPU"
+        # Prefer what the worker actually loaded (it may have fallen back).
+        actual = getattr(self.engine, "actual_device", None)
+        dev_label = "GPU" if (actual or device) == "cuda" else "CPU"
         state = tr("tray.ready") if self.engine.model_loaded else tr("tray.model_not_loaded")
         if self.hotkeys.paused:
             state = tr("tray.paused")
@@ -541,7 +550,21 @@ class TrayApp(QObject):
         if current_language() != previous_language:
             self._retranslate_tray()
         self.hotkeys.bind(self.config.hotkey_ptt, self.config.hotkey_toggle)
-        self.engine.reload_postfilter()
+        # Model/device change -> full worker restart in the background (a
+        # fresh process re-probes the GPU and re-registers DLL paths — the
+        # only correct move right after the CUDA runtime install). Anything
+        # else (dictionary, context, language) is a cheap config refresh.
+        loaded_key = getattr(self.engine, "loaded_key", None)
+        current_key = (self.config.model_size, *self.config.resolve_device())
+        if loaded_key is not None and current_key != loaded_key:
+            self.engine.unload_model()
+            self._preload_model()
+        else:
+            # Off the GUI thread: the worker lock may be held by an
+            # in-flight transcription and must not freeze the dialog.
+            threading.Thread(
+                target=self.engine.reload_postfilter, daemon=True
+            ).start()
         autostart.set_enabled(self.config.autostart)
         self.recorder.device = self.config.input_device
         self._update_status()
@@ -555,6 +578,9 @@ class TrayApp(QObject):
         self.hotkeys.unbind()
         if self._recording:
             self.recorder.cancel()
+        shutdown = getattr(self.engine, "shutdown", None)
+        if shutdown is not None:
+            shutdown()
         self.tray.hide()
         self.app.quit()
 

@@ -62,6 +62,11 @@ class Config:
     last_update_check: str = ""        # ISO-8601 UTC of the last SUCCESSFUL check
     update_available_tag: str = ""     # release tag newer than APP_VERSION ("" = none)
 
+    # Honest per-machine speed measurements from the latency test:
+    # {"<model>|<device>": {"latency": s, "audio": s, "at": iso} or
+    #  {"unstable": True, "at": iso} when the config crashed the worker}.
+    bench_results: dict[str, dict] = field(default_factory=dict)
+
     # Post-filter dictionary: {"heard": "written"}
     replacements: dict[str, str] = field(default_factory=dict)
 

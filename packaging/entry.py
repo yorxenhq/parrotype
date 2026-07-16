@@ -22,6 +22,15 @@ os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 os.environ.setdefault("KMP_BLOCKTIME", "0")
 os.environ.setdefault("OMP_WAIT_POLICY", "PASSIVE")
 
+# STT worker mode: this same exe hosts the isolated decode process
+# (core.sttclient spawns `Parrotype.exe --stt-worker`). Branch BEFORE the
+# stdio redirect below — the worker's stdin/stdout ARE its IPC channel and
+# it performs its own fd discipline (core.sttworker._steal_stdio).
+if "--stt-worker" in sys.argv:
+    from core.sttworker import main as _worker_main
+
+    sys.exit(_worker_main())
+
 
 def _stream_ok(stream) -> bool:
     if stream is None:
