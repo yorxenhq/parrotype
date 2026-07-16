@@ -17,7 +17,7 @@ from core import Config, Engine  # noqa: E402
 from core.config import cuda_available  # noqa: E402
 
 MODELS = ["tiny", "base", "small", "medium"]
-GPU_EXTRA = ["large-v3"]
+GPU_EXTRA = ["large-v3-turbo", "large-v3"]
 
 
 def bench(wav: str, model: str, device: str) -> tuple[float, str]:

@@ -16,7 +16,7 @@ def test_defaults_when_no_file():
 
     cfg = Config.load()
     # First-run default is hardware-dependent (picked from measured latency).
-    expected = "medium" if cuda_available() else "small"
+    expected = "large-v3-turbo" if cuda_available() else "small"
     assert cfg.model_size == expected
     assert cfg.language == "auto"
     assert cfg.history_limit == 50

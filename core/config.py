@@ -56,6 +56,10 @@ class Config:
     # Post-filter dictionary: {"heard": "written"}
     replacements: dict[str, str] = field(default_factory=dict)
 
+    # Free-form recognition context appended to the whisper initial_prompt
+    # (dictionary targets are always included automatically). Empty = off.
+    recognition_context: str = ""
+
     # -- persistence ---------------------------------------------------
 
     @staticmethod
@@ -67,10 +71,11 @@ class Config:
         path = cls.path()
         if not path.exists():
             # First run: default model picked from measured latency on the
-            # reference machine (see README benchmark): GPU handles `medium`
-            # well under 1s per 10s of audio; CPU is only comfortable at `small`.
+            # reference machine (see README benchmark): GPU runs
+            # `large-v3-turbo` in ~0.8s per 13.5s of audio (best quality per
+            # second); CPU is only comfortable at `small`.
             cfg = cls()
-            cfg.model_size = "medium" if cuda_available() else "small"
+            cfg.model_size = "large-v3-turbo" if cuda_available() else "small"
             return cfg
         try:
             raw: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))

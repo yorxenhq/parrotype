@@ -135,10 +135,24 @@ class Engine:
         segments_iter, info = self._model.transcribe(
             audio_data,
             language=language,
-            vad_filter=True,                      # silero VAD (bundled with faster-whisper)
-            vad_parameters={"min_silence_duration_ms": 300},
+            # Silero VAD (bundled): tuned so a quiet trailing tail (breathing,
+            # mumble, room noise after the last word) is cut instead of being
+            # decoded into hallucinated words.
+            vad_filter=True,
+            vad_parameters={
+                "threshold": 0.5,
+                "min_silence_duration_ms": 500,
+                "speech_pad_ms": 200,
+                "min_speech_duration_ms": 250,
+            },
             beam_size=5,
-            condition_on_previous_text=False,     # dictation: avoid cross-utterance drift
+            # Anti-hallucination set for dictation:
+            condition_on_previous_text=False,     # no cross-segment drift
+            temperature=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],  # greedy first, fallback cascade
+            no_speech_threshold=0.6,              # drop segments the model deems non-speech
+            log_prob_threshold=-1.0,              # reject low-confidence decodes
+            compression_ratio_threshold=2.4,      # reject repetitive gibberish
+            initial_prompt=self.initial_prompt(),
         )
         segment_texts = [seg.text.strip() for seg in segments_iter]
         latency = time.perf_counter() - t0
@@ -156,6 +170,27 @@ class Engine:
             latency_seconds=latency,
             segments=segment_texts,
         )
+
+    def initial_prompt(self) -> str | None:
+        """Recognition seed: unique dictionary targets + user context.
+
+        The right-hand sides of the replacement dictionary are exactly the
+        terms the user dictates (product names, tech vocabulary), so they
+        bias Whisper toward the correct spelling. The free-form recognition
+        context from settings is appended. Empty -> None (unchanged behavior).
+        """
+        seen: dict[str, None] = {}
+        for value in self.config.replacements.values():
+            term = value.strip()
+            if term:
+                seen.setdefault(term)
+        parts = []
+        if seen:
+            parts.append(", ".join(seen) + ".")
+        context = (self.config.recognition_context or "").strip()
+        if context:
+            parts.append(context)
+        return " ".join(parts) or None
 
     def reload_postfilter(self) -> None:
         """Re-read replacement dictionary from config (after settings change)."""

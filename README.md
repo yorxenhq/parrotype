@@ -52,20 +52,25 @@ First transcription downloads the model (~75 MB tiny … ~3 GB large-v3).
 ## Latency (measured)
 
 Reference machine: RTX 4050 Laptop 6GB, 32GB RAM, Python 3.13.
-Warm-run transcription time for a 13.5s English WAV (see
-`scripts/benchmark.py`; first pass per model excluded as warm-up):
+Warm-run transcription time for a 13.5s English WAV with the production
+decode parameters — anti-hallucination temperature cascade + tuned VAD
+(see `scripts/benchmark.py`; first pass per model excluded as warm-up):
 
 | Model | CPU int8 | GPU float16 |
 |---|---|---|
-| tiny | 0.47s | 0.21s |
-| base | 0.79s | 0.28s |
-| small | 2.28s | 0.44s |
-| medium | 6.67s | 0.93s |
-| large-v3 | — | 2.24s |
+| tiny | 0.50s | 0.25s |
+| base | 0.84s | 0.30s |
+| small | 2.44s | 0.48s |
+| medium | 6.81s | 0.94s |
+| large-v3-turbo | — | 0.78s |
+| large-v3 | — | 6.53s* |
 
-**Default:** `medium` when CUDA is available (best quality under 1s),
-`small` on CPU-only machines. Pick differently in Settings -> Модель ->
-Тест латентности.
+\* large-v3 on this 6GB GPU triggers the fallback decode cascade and is
+much slower under the production parameters than in a bare greedy run.
+
+**Default:** `large-v3-turbo` when CUDA is available (best quality per
+second, 0.78s), `small` on CPU-only machines. Pick differently in
+Settings -> Модель -> Тест латентности.
 
 ## Testing
 

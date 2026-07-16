@@ -27,6 +27,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QStackedWidget,
     QTableWidget,
@@ -41,7 +42,7 @@ from shells.tray.hotkeys import validate_combo
 
 log = logging.getLogger(__name__)
 
-MODEL_SIZES = ["tiny", "base", "small", "medium", "large-v3"]
+MODEL_SIZES = ["tiny", "base", "small", "medium", "large-v3-turbo", "large-v3"]
 LANGUAGES = [("Auto", "auto"), ("Русский", "ru"), ("English", "en")]
 DEVICES = [("Авто", "auto"), ("GPU (CUDA)", "cuda"), ("CPU", "cpu")]
 
@@ -186,6 +187,17 @@ class SettingsDialog(QDialog):
 
         layout.addLayout(form)
 
+        context_label = QLabel("Контекст распознавания (термины, имена — подсказка модели):")
+        context_label.setObjectName("muted")
+        layout.addWidget(context_label)
+        self.context_edit = QPlainTextEdit(self.config.recognition_context)
+        self.context_edit.setPlaceholderText(
+            "Например: Claude Code, Cloudflare, Kubernetes…"
+        )
+        self.context_edit.setFixedHeight(70)
+        self.context_edit.textChanged.connect(self._save_context)
+        layout.addWidget(self.context_edit)
+
         self.latency_btn = QPushButton("Тест латентности")
         self.latency_btn.clicked.connect(self._run_latency_test)
         layout.addWidget(self.latency_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -328,6 +340,11 @@ class SettingsDialog(QDialog):
         self.config.save()
         self.config_changed.emit()
 
+    def _save_context(self) -> None:
+        self.config.recognition_context = self.context_edit.toPlainText()
+        self.config.save()
+        self.config_changed.emit()
+
     # -- dictionary -----------------------------------------------------------
 
     def _append_dict_row(self, heard: str, written: str) -> None:
@@ -465,7 +482,7 @@ class SettingsDialog(QDialog):
                     border-left: 2px solid {theme.ACCENT};
                 }}
                 QLabel#muted {{ color: {theme.MUTED}; }}
-                QLineEdit, QComboBox, QTableWidget, QListWidget {{
+                QLineEdit, QComboBox, QTableWidget, QListWidget, QPlainTextEdit {{
                     background: #17171C; border: 1px solid {theme.LINE};
                     border-radius: 6px; padding: 6px;
                 }}
