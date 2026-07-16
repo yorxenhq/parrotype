@@ -32,7 +32,9 @@
     height:44px; border-radius:22px;
     background:rgba(23,23,28,.88);            /* #17171C, alpha 0xE0 */
     display:inline-flex; align-items:center;
-    padding:0 16px; gap:0; font-size:13.5px; white-space:nowrap;
+    padding:0 18px; gap:0; font-size:13.5px; white-space:nowrap;
+    border:1px solid rgba(255,255,255,.06);   /* hairline edge */
+    box-shadow:0 10px 28px rgba(0,0,0,.42);   /* soft drop shadow */
   }
   .rec-dot { width:10px; height:10px; border-radius:50%; background:#FF5C5C; flex:none; }
   .rec-dot.pulse { animation:pulse 1.5s ease-in-out infinite; }
@@ -121,6 +123,19 @@
 
   <div class="state">
     <div class="label">
+      <div class="name">Статус · загрузка модели</div>
+      <div class="desc">Первый запуск: прогресс скачивания весов (~1.5 ГБ) вместо молчаливого ожидания.</div>
+    </div>
+    <div class="stage">
+      <div class="pill">
+        <span class="spinner"></span>
+        <span class="text">скачиваю модель — 62%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="state">
+    <div class="label">
       <div class="name">Вставлено</div>
       <div class="desc">Галка accent + превью первых слов (обрез 32 симв.). Flash 800ms → fade 400ms.</div>
     </div>
@@ -150,7 +165,10 @@
     <b>Позиция:</b> низ-центр активного монитора (по курсору), 24px над таскбаром — не у курсора, чтобы не дёргалась.<br>
     <b>Фокус:</b> окно никогда не активируется (<span class="mono">WindowDoesNotAcceptFocus + WA_ShowWithoutActivating</span>) — иначе вставка уйдёт не туда.<br>
     <b>Клики:</b> сквозные (<span class="mono">WindowTransparentForInput</span>) во всех состояниях, кроме ошибки.<br>
-    <b>Esc</b> во время записи = отмена: ничего не вставляем, пилюля гаснет.
+    <b>Esc</b> во время записи = отмена: ничего не вставляем, пилюля гаснет.<br>
+    <b>Движение:</b> появление/уход — fade + slide 14px (OutCubic, 150–200ms); waveform сглажен
+    (быстрая атака, медленный спад); превью вставленного текста режется по границе слова.
+    Ошибка может нести действие: клик = «включить микрофон» и т.п.
   </div>
 </div>
 </body>

@@ -6,9 +6,21 @@ Local voice dictation for Windows: press a hotkey, speak, release — your
 words are typed into whatever window you're in. Runs fully on your machine
 (faster-whisper). No cloud, no account, no audio leaving your laptop.
 
-Status: **v1 internal build** — core + tray app + CLI implemented and
-machine-tested; live-microphone flows still need a human pass (see
-[What still needs a human check](#what-still-needs-a-human-check)).
+Status: **v1.5 release candidate** — core + polished tray app + first-run
+wizard + CLI, reliability package, RU/EN UI, PyInstaller build + Inno
+Setup script. Live-microphone flows and the installed build still need a
+human pass (see [What still needs a human check](#what-still-needs-a-human-check)).
+
+## Languages
+
+**Optimized for English, Russian, Spanish, German, French, Italian,
+Portuguese, Polish, Ukrainian, Dutch, Turkish, Japanese, Korean and
+Chinese** — each passed a measured recognition-quality gate on the
+production engine (>= 80% content-keyword recall; methodology and per-
+language results: `scripts/lang_gate.py`, `design/preview/lang-gate.md`).
+Auto-detect covers the 90+ languages of the underlying Whisper model —
+that part is a property of Whisper, not a Parrotype guarantee.
+UI languages: Russian + English (follows the system, switchable).
 
 ## What's implemented (v1)
 
@@ -47,7 +59,19 @@ python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\python -m shells.cli tests\data\test_en.wav --verbose   # CLI
 ```
 
-First transcription downloads the model (~75 MB tiny … ~3 GB large-v3).
+First transcription downloads the model (~75 MB tiny … ~3 GB large-v3);
+the pill and the first-run wizard show download progress.
+
+## Packaged build (v1.5)
+
+```powershell
+.venv\Scripts\python -m PyInstaller packaging\parrotype.spec --noconfirm   # -> dist\Parrotype\
+# installer (requires Inno Setup 6): ISCC.exe packaging\installer.iss     # -> dist\ParrotypeSetup.exe
+```
+
+The packaged build is CPU-only (NVIDIA CUDA runtimes are excluded to keep
+the bundle sane); GPU users run from source. Model weights download on
+first run through the wizard.
 
 ## Latency (measured)
 

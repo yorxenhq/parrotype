@@ -65,9 +65,11 @@
       <div class="page">
         <div class="row"><label>Хоткей (удерживать):</label><div class="field mono">ctrl+alt</div></div>
         <div class="row"><label>Хоткей (вкл/выкл):</label><div class="field mono">ctrl+shift+space</div></div>
-        <div class="row"><label>Язык:</label><div class="field combo">Auto<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Язык распознавания:</label><div class="field combo">Auto<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Язык интерфейса:</label><div class="field combo">Как в системе<span class="arrow">▼</span></div></div>
         <div class="row"><label>Способ вставки:</label><div class="field combo">Печать (быстро, не трогает буфер)<span class="arrow">▼</span></div></div>
         <div class="row"><label>Микрофон:</label><div class="field combo">Системный по умолчанию<span class="arrow">▼</span></div></div>
+        <div class="row"><label>Уровень:</label><div style="width:250px;height:8px;border-radius:4px;background:#2E2E36;"><div style="width:45%;height:8px;border-radius:4px;background:#4FD1B0;"></div></div></div>
         <div class="row"><label>Автозапуск:</label><div class="check"><span class="box">✓</span>Запускать вместе с Windows</div></div>
         <div class="row"><label>Звук:</label><div class="check"><span class="box">✓</span>Тихий тик старта/стопа записи</div></div>
       </div>
@@ -78,10 +80,9 @@
     <b>Соответствие коду:</b> сайдбар <span class="mono">#191920</span>, активный пункт — фон
     <span class="mono">#2E2E36</span> + accent-текст + 2px accent-кайма слева; поля
     <span class="mono">#17171C</span> с рамкой <span class="mono">#2E2E36</span>, радиус 6px. Состав строк
-    вкладки «Общее» — фактический (включая «Способ вставки» из итерации 2).<br>
-    <b>Отличия от живого окна:</b> тайтлбар и чекбоксы здесь нарисованы токен-стилем — в приложении они
-    нативные Windows/Qt (Fusion); комбобоксы Qt имеют свою стрелку и паддинги. Тёмная тема применяется только при
-    тёмной системной теме (dark-first, светлая — системный Qt-стиль без кастомного QSS).
+    вкладки «Общее» — фактический (язык распознавания/интерфейса, способ вставки, live-уровень микрофона).<br>
+    <b>Соответствие выросло:</b> в приложении теперь глобальный QSS (комбо, чекбоксы, скроллы, меню) и
+    тёмный тайтлбар через DWM — окно совпадает с этой карточкой. Реальные рендеры: design/preview/settings-tabs.png.
   </div>
 </div>
 </body>

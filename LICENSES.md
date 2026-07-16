@@ -33,6 +33,7 @@ Goal: everything distribution-safe (MIT / Apache / BSD / LGPL-dynamic).
 | numpy | 2.5.1 | BSD-3-Clause (and vendored: 0BSD/MIT/Zlib/CC0) |
 | PySide6 (+Essentials/Addons, shiboken6) | 6.11.1 | LGPL-3.0-only (dynamic) |
 | pyperclip | 1.11.0 | BSD |
+| pycaw (+comtypes) | 20251023 | MIT |
 
 Optional (GPU only): nvidia-cublas-cu12, nvidia-cudnn-cu12,
 nvidia-cuda-nvrtc-cu12 — proprietary NVIDIA redistributables.
