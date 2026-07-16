@@ -55,6 +55,11 @@ class Config:
     keep_history: bool = True
     history_limit: int = 50
 
+    # Updates: one anonymous GitHub request, at most once a week (About page toggle)
+    check_updates: bool = True
+    last_update_check: str = ""        # ISO-8601 UTC of the last SUCCESSFUL check
+    update_available_tag: str = ""     # release tag newer than APP_VERSION ("" = none)
+
     # Post-filter dictionary: {"heard": "written"}
     replacements: dict[str, str] = field(default_factory=dict)
 
