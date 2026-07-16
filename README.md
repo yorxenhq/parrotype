@@ -140,3 +140,7 @@ LICENSES.md    dependency license audit
 ```
 
 License: MIT (dependencies audited in `LICENSES.md`).
+
+## Support
+
+Parrotype is free and stays free. If it saves you time, you can [buy me a coffee](https://ko-fi.com/eugene_vovk) — it keeps the parrot fed.
