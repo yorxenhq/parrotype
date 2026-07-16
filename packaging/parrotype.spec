@@ -21,6 +21,7 @@ a = Analysis(
         (str(ROOT / "assets" / "appicon.svg"), "assets"),
         (str(ROOT / "assets" / "app.ico"), "assets"),
         (str(ROOT / "assets" / "latency_test.wav"), "assets"),
+        (str(ROOT / "assets" / "fonts"), "assets/fonts"),
     ],
     hiddenimports=[
         "shells.tray.app",

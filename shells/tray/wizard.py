@@ -91,8 +91,14 @@ class FirstRunWizard(QDialog):
             f"""
             QDialog {{ background: {theme.SURFACE}; }}
             QWidget#wizfooter {{ border-top: 1px solid {theme.LINE}; }}
-            QLabel#stepno {{ color: {theme.ACCENT}; font-size: 11px; letter-spacing: 2px; }}
-            QLabel#steptitle {{ font-size: 17px; font-weight: 600; }}
+            QLabel#stepno {{
+                color: {theme.ACCENT}; font-size: 11px; letter-spacing: 2px;
+                font-family: {theme.FONT_HEADING_CHAIN};
+            }}
+            QLabel#steptitle {{
+                font-size: 18px; font-weight: 700;
+                font-family: {theme.FONT_HEADING_CHAIN};
+            }}
             QLabel#muted {{ color: {theme.MUTED}; }}
             QLabel#okline {{ color: {theme.ACCENT}; }}
             """

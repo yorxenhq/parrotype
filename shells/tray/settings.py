@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QPainter
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -369,9 +369,7 @@ class SettingsDialog(QDialog):
             f'<span style="color:{theme.TEXT}">Parro</span>'
             f'<span style="color:{theme.ACCENT}">type</span>'
         )
-        font = QFont(theme.FONT_UI, 16)
-        font.setBold(True)
-        title.setFont(font)
+        title.setObjectName("wordmark")   # Space Grotesk via app QSS
         layout.addWidget(title)
 
         slogan = QLabel(tr("set.about_slogan"))

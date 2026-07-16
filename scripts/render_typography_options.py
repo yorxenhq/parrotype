@@ -33,6 +33,7 @@ FONTS = Path(__file__).resolve().parents[1] / "design" / "fonts"
 BG = (16, 16, 20)
 
 _app = QApplication(sys.argv)
+theme.load_fonts()
 _app.setStyleSheet(theme.app_qss())
 set_language("ru")
 

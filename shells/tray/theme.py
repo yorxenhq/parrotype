@@ -16,6 +16,24 @@ REC = "#FF5C5C"              # recording dot only
 FONT_UI = "Segoe UI Variable"
 FONT_UI_FALLBACK = "Segoe UI"
 FONT_MONO = "Cascadia Mono"
+# Headings/wordmark/kickers — owner-approved variant C. Space Grotesk has
+# no Cyrillic: RU headings intentionally fall back to Segoe (seen and
+# accepted on the comparison collage).
+FONT_HEADING = "Space Grotesk"
+FONT_HEADING_CHAIN = f'"{FONT_HEADING}", "{FONT_UI}", "{FONT_UI_FALLBACK}"'
+
+
+def load_fonts() -> None:
+    """Register bundled fonts (assets/fonts) — call once after QApplication."""
+    from pathlib import Path
+
+    from PySide6.QtGui import QFontDatabase
+
+    fonts_dir = Path(__file__).resolve().parents[2] / "assets" / "fonts"
+    if not fonts_dir.is_dir():
+        return
+    for ttf in fonts_dir.glob("*.ttf"):
+        QFontDatabase.addApplicationFont(str(ttf))
 
 # Geometry
 PILL_HEIGHT = 44
@@ -131,4 +149,9 @@ def app_qss() -> str:
         background: {SURFACE}; color: {TEXT}; border: 1px solid {LINE};
         padding: 5px 8px; border-radius: 5px;
     }}
+
+    /* headings: Space Grotesk (owner-approved variant C); body stays Segoe */
+    QLabel#steptitle {{ font-family: {FONT_HEADING_CHAIN}; font-size: 18px; font-weight: 700; }}
+    QLabel#stepno {{ font-family: {FONT_HEADING_CHAIN}; }}
+    QLabel#wordmark {{ font-family: {FONT_HEADING_CHAIN}; font-size: 26px; font-weight: 700; }}
     """

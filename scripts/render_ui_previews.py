@@ -44,6 +44,7 @@ CAPTION = (154, 154, 166)
 TITLE = (236, 236, 241)
 
 _app = QApplication(sys.argv)
+theme.load_fonts()
 _app.setStyleSheet(theme.app_qss())
 set_language("ru")
 

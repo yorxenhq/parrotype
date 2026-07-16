@@ -35,6 +35,11 @@ Goal: everything distribution-safe (MIT / Apache / BSD / LGPL-dynamic).
 | pyperclip | 1.11.0 | BSD |
 | pycaw (+comtypes) | 20251023 | MIT |
 
+Bundled font: **Space Grotesk** (headings/wordmark) — SIL Open Font
+License 1.1; full license text ships with the app at
+`assets/fonts/OFL.txt`. OFL permits bundling and commercial
+redistribution with software as long as the license accompanies the font.
+
 Optional (GPU only): nvidia-cublas-cu12, nvidia-cudnn-cu12,
 nvidia-cuda-nvrtc-cu12 — proprietary NVIDIA redistributables.
 

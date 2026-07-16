@@ -480,6 +480,7 @@ def main() -> int:
         log.error("System tray is not available")
         return 1
 
+    theme.load_fonts()
     tray_app = TrayApp(app)
     app.setStyleSheet(theme.app_qss())
     tray_app._update_status()
