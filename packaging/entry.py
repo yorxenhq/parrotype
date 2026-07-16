@@ -11,6 +11,11 @@ to a log file at the *fd* level before anything heavy is imported.
 import os
 import sys
 
+# ctranslate2 and onnxruntime each bundle an OpenMP runtime; duplicate
+# runtimes in one frozen process can intermittently access-violate on
+# CPU decode. The standard mitigation, set before either library loads:
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+
 
 def _stream_ok(stream) -> bool:
     if stream is None:
@@ -46,6 +51,13 @@ def _ensure_stdio() -> None:
 
 
 _ensure_stdio()
+
+import faulthandler  # noqa: E402
+
+try:
+    faulthandler.enable(file=sys.stderr)
+except Exception:
+    pass
 
 from shells.tray.app import main  # noqa: E402
 

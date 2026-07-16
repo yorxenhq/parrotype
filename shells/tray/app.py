@@ -108,7 +108,10 @@ class TrayApp(QObject):
         self._settings_language = current_language()
         self.wizard: FirstRunWizard | None = None
         self._build_tray()
-        if self.config.first_run_done:
+        if os.environ.get("PARROTYPE_SELFTEST_WAV"):
+            # Headless release check must not sit waiting in the wizard.
+            self._preload_model()
+        elif self.config.first_run_done:
             # First run defers the preload: the wizard picks the model first.
             self._preload_model()
 
@@ -175,7 +178,7 @@ class TrayApp(QObject):
 
     def maybe_show_wizard(self) -> bool:
         """Show the first-run wizard when needed. Returns True if shown."""
-        if self.config.first_run_done:
+        if self.config.first_run_done or os.environ.get("PARROTYPE_SELFTEST_WAV"):
             return False
         self._wizard_active = True
         self.wizard = FirstRunWizard(self.config)
@@ -254,7 +257,10 @@ class TrayApp(QObject):
         except Exception:
             log.exception("SELFTEST FAILED")
             code = 3
-        QTimer.singleShot(0, lambda: self.app.exit(code))
+        # Runs on the preload worker thread: Qt timers are off-limits here,
+        # and a test hook should terminate unconditionally anyway.
+        logging.shutdown()
+        os._exit(code)
 
     def _on_model_progress(self, pct: int) -> None:
         text = tr("pill.downloading_model", pct=pct)

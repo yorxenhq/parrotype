@@ -9,7 +9,13 @@
 
 from pathlib import Path
 
+from PyInstaller.utils.hooks import collect_data_files
+
 ROOT = Path(SPECPATH).parent
+
+# faster-whisper ships its VAD model (silero_vad_*.onnx) as package data;
+# without it the very first transcription of the packaged app fails.
+_fw_assets = collect_data_files("faster_whisper", subdir="assets")
 
 a = Analysis(
     [str(ROOT / "packaging" / "entry.py")],
@@ -22,7 +28,7 @@ a = Analysis(
         (str(ROOT / "assets" / "app.ico"), "assets"),
         (str(ROOT / "assets" / "latency_test.wav"), "assets"),
         (str(ROOT / "assets" / "fonts"), "assets/fonts"),
-    ],
+    ] + _fw_assets,
     hiddenimports=[
         "shells.tray.app",
         "sounddevice",
