@@ -204,7 +204,7 @@ class SettingsDialog(QDialog):
 
         buttons = QHBoxLayout()
         add_btn = QPushButton("Добавить")
-        add_btn.clicked.connect(lambda: self._append_dict_row("", ""))
+        add_btn.clicked.connect(self._add_dict_row)
         remove_btn = QPushButton("Удалить строку")
         remove_btn.clicked.connect(self._remove_dict_row)
         buttons.addWidget(add_btn)
@@ -318,6 +318,17 @@ class SettingsDialog(QDialog):
         self.dict_table.setItem(row, 0, QTableWidgetItem(heard))
         self.dict_table.setItem(row, 1, QTableWidgetItem(written))
         self.dict_table.blockSignals(False)
+
+    def _add_dict_row(self) -> None:
+        # An appended empty row is invisible without focus — open the editor
+        # on the "heard" cell immediately so the click has visible effect.
+        self._append_dict_row("", "")
+        row = self.dict_table.rowCount() - 1
+        self.dict_table.setCurrentCell(row, 0)
+        self.dict_table.setFocus()
+        item = self.dict_table.item(row, 0)
+        if item is not None:
+            self.dict_table.editItem(item)
 
     def _remove_dict_row(self) -> None:
         row = self.dict_table.currentRow()
