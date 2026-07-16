@@ -75,7 +75,7 @@ python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
 .venv\Scripts\python -m shells.cli tests\data\test_en.wav        # or just transcribe a file
 ```
 
-GPU (NVIDIA, CUDA 12): `.venv\Scripts\pip install nvidia-cublas-cu12 nvidia-cudnn-cu12`. The packaged installer is CPU-only to keep the bundle sane; GPU users run from source.
+GPU (NVIDIA): the installed app offers a one-click CUDA runtime download when it sees your graphics card (Settings → Model), so the installer itself stays small. From source: `.venv\Scripts\pip install nvidia-cublas-cu12 nvidia-cudnn-cu12`.
 
 Build the installer yourself:
 
@@ -94,14 +94,14 @@ ISCC.exe packaging\installer.iss                                           # -> 
 .venv\Scripts\python -m pytest tests
 ```
 
-63 unit and integration tests: config, history, dictionary post-filter, update check, reliability guards, and end-to-end STT on real model output. Beyond pytest, `scripts/selftest_*.py` boot the actual tray app headless, drive the real Windows keyboard hook with injected input, and paste into a live Notepad.
+72 unit and integration tests: config, history, dictionary post-filter, update check, reliability guards, and end-to-end STT on real model output. Beyond pytest, `scripts/selftest_*.py` boot the actual tray app headless, drive the real Windows keyboard hook with injected input, and paste into a live Notepad.
 
 </details>
 
 <details>
 <summary><b>Tech notes</b></summary>
 
-- Engine: [faster-whisper](https://github.com/SYSTRAN/faster-whisper) + Silero VAD, 16 kHz mono capture via sounddevice. CUDA when available, automatic CPU fallback.
+- Engine: [faster-whisper](https://github.com/SYSTRAN/faster-whisper), 16 kHz mono capture via sounddevice. CUDA when available, automatic CPU fallback. The decode runs in an isolated worker process — a native crash restarts the worker, never the app.
 - UI: PySide6 tray app. The overlay pill never steals focus and is click-through; Esc cancels a recording.
 - Default model: `large-v3-turbo` on GPU (0.78 s for a 13.5 s phrase on an RTX 4050 laptop), `small` on CPU. Settings has a built-in latency test — measure on your own machine and pick.
 - Config and history live in `%APPDATA%\Parrotype`. History is local, capped at the last 50 dictations, and can be turned off.

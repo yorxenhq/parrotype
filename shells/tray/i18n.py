@@ -292,8 +292,8 @@ _STRINGS: dict[str, dict[str, str]] = {
     "wiz.model.downloading": {"ru": "Скачиваю модель — {pct}%", "en": "Downloading model — {pct}%"},
     "wiz.model.cached": {"ru": "Модель уже скачана.", "en": "Model already downloaded."},
     "wiz.model.gpu_missing_libs": {
-        "ru": "GPU найден, но CUDA-библиотек нет — работаю на CPU.",
-        "en": "GPU detected, but CUDA libraries are missing — running on CPU.",
+        "ru": "Пока распознаёт процессор — видеокарту можно включить выше.",
+        "en": "Running on the processor for now — the GPU can be enabled above.",
     },
     "wiz.model.failed": {
         "ru": "Не получилось скачать — проверь интернет и попробуй ещё раз.",
