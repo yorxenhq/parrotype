@@ -34,7 +34,7 @@ Hold a hotkey, say what you want, release — the text lands in whatever window 
 
 1. Download [ParrotypeSetup.exe](https://github.com/yorxenhq/parrotype/releases/latest/download/ParrotypeSetup.exe) from the [latest release](https://github.com/yorxenhq/parrotype/releases/latest).
 2. Run it. Windows SmartScreen will warn about an unknown publisher — the installer isn't code-signed yet. "More info" → "Run anyway", or build from source below if you'd rather trust the code than us.
-3. First run opens a three-step wizard: pick a language, pick a model (it downloads on the spot, ~75 MB to ~3 GB depending on the model), try the hotkey.
+3. First run opens a three-step wizard: check your microphone, pick a model (it downloads on the spot, ~75 MB to ~3 GB depending on the model), try the hotkey.
 
 Then hold `Ctrl+Alt` anywhere and speak. `Ctrl+Shift+Space` toggles hands-free mode.
 

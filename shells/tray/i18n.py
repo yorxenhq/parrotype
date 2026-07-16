@@ -62,7 +62,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "tray.mic_silent_title": {"ru": "Микрофон молчит", "en": "Microphone is silent"},
     "tray.mic_silent_body": {
         "ru": "Микрофон отдаёт полную тишину. Проверь устройство в настройках.",
-        "en": "The microphone is delivering pure silence. Check the device in Settings.",
+        "en": "The microphone is picking up nothing at all. Check the device in Settings.",
     },
 
     # -- settings window ---------------------------------------------------
@@ -160,7 +160,7 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ru": "Всё происходит на этом компьютере. Твой голос и твой текст не уходят никуда — даже к нам. "
               "Сеть нужна только на два случая: скачать модель и раз в неделю спросить GitHub про новую версию — это можно выключить.",
         "en": "Everything happens on this computer. Your voice and your text go nowhere — not even to us. "
-              "The network is used for two things only: downloading the model and a weekly ask to GitHub for a new version — you can turn that off.",
+              "The network is used for two things only: downloading the model and asking GitHub once a week whether a new version is out — you can turn that off.",
     },
     "set.about_slogan": {"ru": "You talk. The parrot types.", "en": "You talk. The parrot types."},
     "set.about_free": {
