@@ -30,6 +30,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPlainTextEdit,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -266,6 +267,8 @@ class SettingsDialog(QDialog):
     visibility_changed = Signal(bool)   # True while the dialog is on screen
     _latency_done = Signal(str)
     _level = Signal(float)
+    _polish_pct = Signal(int)
+    _polish_done = Signal(bool, str)    # ok, error text
 
     def __init__(self, config: Config, history: History, parent=None) -> None:  # noqa: ANN001
         super().__init__(parent)
@@ -329,6 +332,8 @@ class SettingsDialog(QDialog):
         root.addWidget(self.pages, 1)
 
         self._latency_done.connect(self._show_latency_result)
+        self._polish_pct.connect(self._on_polish_pct)
+        self._polish_done.connect(self._on_polish_done)
         self._level.connect(self._on_level)
         self._apply_style()
 
@@ -502,6 +507,26 @@ class SettingsDialog(QDialog):
         self.context_edit.setToolTip(tr("set.context_tip"))
         layout.addWidget(self.context_edit)
 
+        layout.addSpacing(6)
+
+        # -- polish: the local Wispr-style cleanup layer -----------------
+        self.polish_check = QCheckBox(tr("set.polish_cb"))
+        self.polish_check.setChecked(self.config.polish_enabled)
+        self.polish_check.toggled.connect(self._on_polish_toggled)
+        layout.addWidget(self.polish_check)
+
+        self.polish_status = QLabel(tr("set.polish_hint"))
+        self.polish_status.setObjectName("muted")
+        self.polish_status.setWordWrap(True)
+        layout.addWidget(self.polish_status)
+
+        self.polish_bar = QProgressBar()
+        self.polish_bar.setRange(0, 100)
+        self.polish_bar.setFixedHeight(6)
+        self.polish_bar.hide()
+        layout.addWidget(self.polish_bar)
+
+        layout.addSpacing(6)
         self.latency_btn = QPushButton(tr("set.latency_btn"))
         self.latency_btn.clicked.connect(self._run_latency_test)
         layout.addWidget(self.latency_btn, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -838,6 +863,58 @@ class SettingsDialog(QDialog):
         # GPU trio and config_changed lets the app restart its worker.
         self._rebuild_model_picker()
         self._save_model()
+
+    # -- polish toggle -----------------------------------------------------------
+
+    def _on_polish_toggled(self, checked: bool) -> None:
+        if not checked:
+            self.config.polish_enabled = False
+            self.config.save()
+            self.polish_status.setText(tr("set.polish_hint"))
+            self.config_changed.emit()
+            return
+        from core.polish import PolishEngine
+
+        polisher = PolishEngine(self.config.polish_model)
+        if polisher.is_model_cached():
+            self._enable_polish()
+            return
+        # First enable: fetch the model once, like the whisper weights.
+        self.polish_check.setEnabled(False)
+        self.polish_bar.setValue(0)
+        self.polish_bar.show()
+        self.polish_status.setText(tr("set.polish_downloading", pct=0))
+
+        def worker() -> None:
+            try:
+                polisher.ensure_model(progress_cb=self._polish_pct.emit)
+                self._polish_done.emit(True, "")
+            except Exception as exc:
+                log.exception("Polish model download failed")
+                self._polish_done.emit(False, str(exc))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_polish_pct(self, pct: int) -> None:
+        self.polish_bar.setValue(pct)
+        self.polish_status.setText(tr("set.polish_downloading", pct=pct))
+
+    def _on_polish_done(self, ok: bool, error: str) -> None:
+        self.polish_check.setEnabled(True)
+        self.polish_bar.hide()
+        if ok:
+            self._enable_polish()
+        else:
+            self.polish_check.blockSignals(True)
+            self.polish_check.setChecked(False)
+            self.polish_check.blockSignals(False)
+            self.polish_status.setText(tr("set.polish_failed", err=error))
+
+    def _enable_polish(self) -> None:
+        self.config.polish_enabled = True
+        self.config.save()
+        self.polish_status.setText(tr("set.polish_ready"))
+        self.config_changed.emit()
 
     # -- latency test --------------------------------------------------------------
 

@@ -18,6 +18,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "pill.release_to_insert": {"ru": "отпусти — вставлю", "en": "release to insert"},
     "pill.hotkey_to_stop": {"ru": "хоткей — стоп", "en": "hotkey to stop"},
     "pill.transcribing": {"ru": "распознаю…", "en": "transcribing…"},
+    "pill.polishing": {"ru": "полирую…", "en": "polishing…"},
     "pill.empty": {"ru": "(пусто)", "en": "(empty)"},
     "pill.downloading_model": {"ru": "скачиваю модель — {pct}%", "en": "downloading model — {pct}%"},
     "pill.mic_muted": {
@@ -108,6 +109,32 @@ _STRINGS: dict[str, dict[str, str]] = {
     "set.context_tip": {
         "ru": "Всё, что ты часто диктуешь: продукты, фамилии, жаргон. Словарь замен добавляется сюда сам.",
         "en": "Anything you dictate often: products, names, jargon. Dictionary entries are added automatically.",
+    },
+    "set.polish_cb": {
+        "ru": "Полировать текст после распознавания",
+        "en": "Polish the transcript",
+    },
+    "set.polish_hint": {
+        "ru": "Убирает «эээ» и слова-паразиты, склеивает самоисправления "
+              "(«в три… нет, в четыре» — останется «в четыре»), расставляет знаки. "
+              "Работает на этом компьютере, как и всё остальное. Если модель "
+              "сомневается — вставится исходный текст без изменений.",
+        "en": "Removes “um” and filler words, resolves self-corrections "
+              "(“at three… no, at four” keeps “at four”), fixes punctuation. "
+              "Runs on this computer like everything else. When the model is "
+              "unsure, the original text is inserted unchanged.",
+    },
+    "set.polish_downloading": {
+        "ru": "Скачиваю модель полировки (~1.1 ГБ, один раз) — {pct}%",
+        "en": "Downloading the polish model (~1.1 GB, one time) — {pct}%",
+    },
+    "set.polish_ready": {
+        "ru": "Полировка включена. Исходный текст каждой диктовки сохраняется в истории.",
+        "en": "Polish is on. The raw transcript of every dictation is kept in History.",
+    },
+    "set.polish_failed": {
+        "ru": "Не получилось скачать модель: {err}",
+        "en": "Could not download the model: {err}",
     },
     "set.latency_btn": {"ru": "Проверить скорость", "en": "Check speed"},
     "set.latency_hint": {

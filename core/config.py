@@ -62,6 +62,13 @@ class Config:
     last_update_check: str = ""        # ISO-8601 UTC of the last SUCCESSFUL check
     update_available_tag: str = ""     # release tag newer than APP_VERSION ("" = none)
 
+    # LLM polish layer: local cleanup of the transcript (fillers,
+    # self-corrections, punctuation). Off until the user enables it AND
+    # the polish model is downloaded. polish_model is a key into
+    # core.polish.POLISH_MODELS (not exposed in the UI yet).
+    polish_enabled: bool = False
+    polish_model: str = "qwen3-1.7b"
+
     # Honest per-machine speed measurements from the latency test:
     # {"<model>|<device>": {"latency": s, "audio": s, "at": iso} or
     #  {"unstable": True, "at": iso} when the config crashed the worker}.

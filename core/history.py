@@ -18,6 +18,7 @@ class HistoryEntry:
     text: str
     timestamp: float          # unix seconds
     audio_seconds: float
+    raw: str = ""             # pre-polish transcript ("" = same as text)
 
 
 class History:
@@ -45,9 +46,15 @@ class History:
         )
         tmp.replace(self.path)
 
-    def add(self, text: str, audio_seconds: float = 0.0) -> None:
+    def add(self, text: str, audio_seconds: float = 0.0, raw: str = "") -> None:
+        # A polished dictation keeps its raw transcript: polish must never
+        # be able to lose what the user actually said.
         self._entries.append(
-            HistoryEntry(text=text, timestamp=time.time(), audio_seconds=audio_seconds)
+            HistoryEntry(
+                text=text, timestamp=time.time(),
+                audio_seconds=audio_seconds,
+                raw=raw if raw != text else "",
+            )
         )
         self._entries = self._entries[-self.limit:]
         self._save()

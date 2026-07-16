@@ -140,6 +140,33 @@ _CYRILLIC_RE = re.compile(r"[а-яё]", re.IGNORECASE)
 
 _WORD_RE = re.compile(r"[\w']+", re.UNICODE)
 
+# Words the model may drop anywhere (meaningless fillers).
+_FILLERS = {
+    "эээ", "эм", "ммм", "ну", "короче", "блин", "типа", "значит", "вот",
+    "um", "uh", "uhm", "erm", "so", "like", "basically", "well", "okay", "ok",
+    "как", "бы",           # «как бы» — allowed only as a pair in speech, cheap approximation
+    "you", "know",         # "you know"
+}
+
+# Self-correction markers: content deletions are allowed ONLY when the
+# raw text shows the speaker actually corrected themselves.
+_CORRECTION_MARKERS = {
+    "нет", "вернее", "точнее", "подожди", "стоп", "отмена", "давай",
+    "смысле",              # «в смысле»
+    "wait", "actually", "scratch", "mean", "instead", "sorry", "rather",
+}
+
+# Spelled-out numbers: deletable when the polished text introduced digits
+# («в три часа» -> «в 3 часа» is normalization, not data loss).
+_NUMBER_WORDS = {
+    "ноль", "один", "одна", "два", "две", "три", "четыре", "пять", "шесть",
+    "семь", "восемь", "девять", "десять", "одиннадцать", "двенадцать",
+    "двадцать", "тридцать", "сорок", "пятьдесят", "сто", "тысяча",
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "twenty", "thirty", "forty", "fifty",
+    "hundred", "thousand",
+}
+
 
 @dataclass
 class PolishResult:
@@ -320,22 +347,45 @@ class PolishEngine:
     def _guard_ok(raw: str, polished: str, terms: list[str]) -> bool:
         """Reject model output that could be WORSE than the raw transcript.
 
-        Allowed: removing words, changing punctuation/case, digits
-        («три» -> «3» is a legitimate normalization). Rejected: any new
-        content word that is not in the raw text or the user dictionary,
-        or output that grew substantially (polish only removes).
+        Two symmetric protections:
+        - ADDITIONS: any content word not in the raw text / user dictionary
+          (digits excepted — «три» -> «3» is legitimate) -> reject.
+        - DELETIONS: fillers may always go; content words may disappear
+          ONLY when the raw text contains a self-correction marker
+          («нет», «вернее», "wait"…), and even then at most half of them.
+          Without a marker the model once dropped a whole sentence —
+          losing what the user said is as bad as inventing.
         """
         if len(polished) > len(raw) * 1.15 + 20:
             return False
         raw_words = {w.casefold() for w in _WORD_RE.findall(raw)}
+        polished_words = {w.casefold() for w in _WORD_RE.findall(polished)}
         term_words = set()
         for term in terms:
             term_words.update(w.casefold() for w in _WORD_RE.findall(term))
-        for word in _WORD_RE.findall(polished):
-            lw = word.casefold()
-            if lw in raw_words or lw in term_words:
+
+        # additions
+        for lw in polished_words:
+            if lw in raw_words or lw in term_words or lw.isdigit():
                 continue
-            if lw.isdigit():
-                continue           # spelled-out number -> digits
             return False
+
+        # deletions
+        raw_content = {
+            w for w in raw_words
+            if w not in _FILLERS and w not in _CORRECTION_MARKERS and not w.isdigit()
+        }
+        deleted = raw_content - polished_words
+        # normalization credit: «три» -> «3» when the output gained digits
+        if any(w.isdigit() and w not in raw_words for w in polished_words):
+            deleted -= _NUMBER_WORDS
+        # dictionary credit: «клауд код» -> «Claude Code» consumes source
+        # words; allow one deletion per term word the polish introduced.
+        added_term_words = (term_words & polished_words) - raw_words
+        allowance = len(added_term_words)
+        if len(deleted) > allowance:
+            if not (raw_words & _CORRECTION_MARKERS):
+                return False
+            if len(deleted) - allowance > max(2, len(raw_content) // 2):
+                return False
         return True

@@ -83,6 +83,40 @@ def test_non_dictionary_term_injection_rejected():
     assert not guard(raw, polished, [])
 
 
+def test_sentence_drop_without_correction_rejected():
+    # The model once silently deleted a whole sentence — that is data loss.
+    raw = ("открой окно настроек и проверь таблицу задержек быстрая рыжая "
+           "лиса прыгает через ленивую собаку")
+    polished = "Открой окно настроек и проверь таблицу задержек."
+    assert not guard(raw, polished, [])
+
+
+def test_content_deletion_without_marker_rejected():
+    raw = "проверка связи раз два как меня слышно приём"
+    polished = "Проверка связи. Приём."
+    assert not guard(raw, polished, [])
+
+
+def test_deletion_with_marker_passes():
+    # «нет» marks a self-correction: dropping the superseded part is the job.
+    raw = "встречу переносим на три нет давай на четыре часа в четверг"
+    polished = "Встречу переносим на четыре часа в четверг."
+    assert guard(raw, polished, [])
+
+
+def test_en_deletion_with_wait_marker_passes():
+    raw = "um so we need to uh push the release by friday no wait by thursday evening"
+    polished = "Push the release by Thursday evening."
+    assert guard(raw, polished, [])
+
+
+def test_excessive_deletion_even_with_marker_rejected():
+    raw = ("подожди сначала расскажи клиенту про тарифы потом про интеграцию "
+           "потом про поддержку и только потом называй цену за внедрение")
+    polished = "Подожди."
+    assert not guard(raw, polished, [])
+
+
 # -- prompt builder / short-input path ----------------------------------------
 
 def test_short_input_skipped_without_model():

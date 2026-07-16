@@ -53,7 +53,8 @@ class _Bridge(QObject):
     """Thread-safe signal bridge from audio/worker threads into the GUI."""
 
     level = Signal(float)
-    recognized = Signal(str, float)      # text, audio_seconds — BEFORE insert attempt
+    polishing = Signal()                 # transcript ready, LLM cleanup running
+    recognized = Signal(str, float, str)  # text, audio_seconds, raw — BEFORE insert
     transcribed = Signal(str, float)     # text, audio_seconds — inserted OK
     insert_failed = Signal(str)          # text left on the clipboard
     failed = Signal(str)
@@ -81,6 +82,7 @@ class TrayApp(QObject):
 
         self.bridge = _Bridge()
         self.bridge.level.connect(self._on_level)
+        self.bridge.polishing.connect(self._on_polishing)
         self.bridge.recognized.connect(self._on_recognized)
         self.bridge.transcribed.connect(self._on_transcribed)
         self.bridge.insert_failed.connect(self._on_insert_failed)
@@ -280,6 +282,14 @@ class TrayApp(QObject):
             with self._engine_lock:
                 result = self.engine.transcribe(audio)
             log.info("SELFTEST OK: %r", result.text[:120])
+            polish_fn = getattr(self.engine, "polish", None)
+            if self.config.polish_enabled and polish_fn is not None:
+                polished = polish_fn(result.text, language=result.language)
+                log.info(
+                    "SELFTEST POLISH OK: changed=%s fell_back=%s %r",
+                    polished.get("changed"), polished.get("fell_back"),
+                    polished.get("text", "")[:120],
+                )
             code = 0
             if os.environ.get("PARROTYPE_SELFTEST_FULL"):
                 code = self._selftest_full_paths(result.text)
@@ -443,15 +453,28 @@ class TrayApp(QObject):
             if not result.text:
                 self.bridge.transcribed.emit("", audio_seconds)
                 return
+            text, raw = result.text, ""
+            polish_fn = getattr(self.engine, "polish", None)
+            if self.config.polish_enabled and polish_fn is not None:
+                self.bridge.polishing.emit()
+                polished = polish_fn(result.text, language=result.language)
+                if polished.get("changed"):
+                    raw = result.text
+                    text = polished["text"]
+                log.info(
+                    "Polish: changed=%s fell_back=%s reason=%r %.2fs",
+                    polished.get("changed"), polished.get("fell_back"),
+                    polished.get("reason", ""), polished.get("latency_seconds", 0),
+                )
             # History is written BEFORE the insert attempt: a dictation
             # must never be lost even if insertion fails.
-            self.bridge.recognized.emit(result.text, audio_seconds)
-            insert = insert_text(result.text, method=self.config.insert_method)
+            self.bridge.recognized.emit(text, audio_seconds, raw)
+            insert = insert_text(text, method=self.config.insert_method)
             if insert.ok:
-                self.bridge.transcribed.emit(result.text, audio_seconds)
+                self.bridge.transcribed.emit(text, audio_seconds)
             else:
                 log.error("Insert failed (%s): %s", insert.method, insert.message)
-                self.bridge.insert_failed.emit(result.text)
+                self.bridge.insert_failed.emit(text)
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -463,10 +486,14 @@ class TrayApp(QObject):
             self.overlay.hide_pill()
             self._set_tray_state(TrayState.IDLE)
 
-    def _on_recognized(self, text: str, audio_seconds: float) -> None:
+    def _on_polishing(self) -> None:
+        if self._busy:
+            self.overlay.show_status(tr("pill.polishing"))
+
+    def _on_recognized(self, text: str, audio_seconds: float, raw: str) -> None:
         # Called BEFORE the insert attempt — a dictation is never lost.
         if self.config.keep_history:
-            self.history.add(text, audio_seconds)
+            self.history.add(text, audio_seconds, raw=raw)
             if self.settings_dialog and self.settings_dialog.isVisible():
                 self.settings_dialog.refresh_history()
 

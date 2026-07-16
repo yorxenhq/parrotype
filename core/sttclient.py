@@ -241,3 +241,31 @@ class IsolatedEngine:
             f"({self.config.model_size}). Try a smaller model or the GPU. "
             f"[{last_error}]"
         )
+
+    def polish(self, text: str, language: str | None = None,
+               deadline_s: float = 8.0) -> dict:
+        """LLM cleanup in the worker. NEVER raises — a polish problem must
+        not cost the user their dictation; worst case returns the text
+        unchanged with fell_back=True."""
+        fallback = {"text": text, "raw_text": text, "changed": False,
+                    "fell_back": True, "reason": "unavailable"}
+        try:
+            with self._lock:
+                self._ensure_loaded()
+                response = self._request(
+                    {"cmd": "polish", "text": text, "language": language,
+                     "deadline_s": deadline_s},
+                    timeout_s=deadline_s + 30,   # + model load headroom
+                )
+            if response.get("ok"):
+                return response
+            log.error("Polish failed: %s", response.get("error"))
+            return {**fallback, "reason": str(response.get("error", ""))}
+        except ChildProcessError as exc:
+            # Native crash inside llama.cpp: recover the worker, keep raw.
+            log.error("Worker crashed during polish: %s", exc)
+            self._kill()
+            return {**fallback, "reason": "crash"}
+        except Exception as exc:
+            log.exception("Polish request failed")
+            return {**fallback, "reason": str(exc)}

@@ -9,7 +9,7 @@
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 ROOT = Path(SPECPATH).parent
 
@@ -17,10 +17,14 @@ ROOT = Path(SPECPATH).parent
 # without it the very first transcription of the packaged app fails.
 _fw_assets = collect_data_files("faster_whisper", subdir="assets")
 
+# llama-cpp-python keeps its native runtime (llama.dll, ggml*.dll) inside
+# the package's lib/ dir — PyInstaller doesn't pick DLLs up by itself.
+_llama_libs = collect_dynamic_libs("llama_cpp")
+
 a = Analysis(
     [str(ROOT / "packaging" / "entry.py")],
     pathex=[str(ROOT)],
-    binaries=[],
+    binaries=_llama_libs,
     datas=[
         (str(ROOT / "assets" / "logo.svg"), "assets"),
         (str(ROOT / "assets" / "logo-small.svg"), "assets"),
@@ -33,6 +37,7 @@ a = Analysis(
         "shells.tray.app",
         "sounddevice",
         "pycaw", "pycaw.pycaw", "comtypes.stream",
+        "llama_cpp",
     ],
     excludes=[
         "nvidia", "nvidia.cublas", "nvidia.cudnn", "nvidia.cuda_nvrtc",

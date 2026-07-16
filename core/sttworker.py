@@ -121,6 +121,39 @@ def _result_header(result) -> dict:  # noqa: ANN001
     }
 
 
+def _handle_polish(engine, polish_holder, header: dict) -> dict:  # noqa: ANN001
+    """LLM cleanup of a transcript — runs HERE so a native llama.cpp crash
+    is recoverable exactly like a whisper crash (worker restart)."""
+    from core.polish import PolishEngine
+
+    if polish_holder.get("engine") is None or (
+        polish_holder.get("model") != engine.config.polish_model
+    ):
+        polish_holder["engine"] = PolishEngine(engine.config.polish_model)
+        polish_holder["model"] = engine.config.polish_model
+    polisher = polish_holder["engine"]
+    # Dictionary targets are exactly the terms the user wants spelled
+    # right — same seed the whisper initial_prompt uses.
+    terms = list(dict.fromkeys(
+        v.strip() for v in engine.config.replacements.values() if v.strip()
+    ))
+    result = polisher.polish(
+        header.get("text", ""),
+        dictionary_terms=terms,
+        deadline_s=float(header.get("deadline_s", 8.0)),
+        language=header.get("language"),
+    )
+    return {
+        "ok": True,
+        "text": result.text,
+        "raw_text": result.raw_text,
+        "changed": result.changed,
+        "fell_back": result.fell_back,
+        "reason": result.reason,
+        "latency_seconds": result.latency_seconds,
+    }
+
+
 def _watch_parent() -> None:
     """Self-terminate the moment the parent app dies.
 
@@ -166,6 +199,7 @@ def main() -> int:
     from core.engine import Engine
 
     engine = Engine()
+    polish_holder: dict = {}      # lazy PolishEngine, keyed by model name
 
     while True:
         try:
@@ -187,6 +221,8 @@ def main() -> int:
                 write_frame(
                     ipc_out, _result_header(engine.transcribe(header["path"]))
                 )
+            elif cmd == "polish":
+                write_frame(ipc_out, _handle_polish(engine, polish_holder, header))
             else:
                 write_frame(ipc_out, {"ok": False, "error": f"unknown cmd {cmd!r}"})
         except Exception as exc:
