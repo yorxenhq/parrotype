@@ -150,6 +150,21 @@ def app_qss() -> str:
         padding: 5px 8px; border-radius: 5px;
     }}
 
+    /* model picker cards (wizard step 2 + settings "Model" page) */
+    QFrame#modelcard {{
+        background: {BG_OVERLAY}; border: 1px solid {LINE}; border-radius: 10px;
+    }}
+    QFrame#modelcard:hover {{ border-color: #4A4A56; }}
+    QFrame#modelcard[selected="true"] {{ border-color: {ACCENT}; }}
+    QLabel#modelname {{
+        font-family: {FONT_HEADING_CHAIN}; font-size: 14px; font-weight: 600;
+    }}
+    QLabel#recchip {{
+        background: rgba(79, 209, 176, 0.16); color: {ACCENT};
+        border-radius: 8px; padding: 1px 8px; font-size: 11px;
+    }}
+    QLabel#modelmeta {{ color: {MUTED}; font-size: 11px; }}
+
     /* headings: Space Grotesk (owner-approved variant C); body stays Segoe */
     QLabel#steptitle {{ font-family: {FONT_HEADING_CHAIN}; font-size: 18px; font-weight: 700; }}
     QLabel#stepno {{ font-family: {FONT_HEADING_CHAIN}; }}

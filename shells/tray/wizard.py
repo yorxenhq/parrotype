@@ -30,6 +30,7 @@ from core.config import cuda_available, cuda_usable
 from shells.tray import theme
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
+from shells.tray.modelpicker import ModelPicker, machine_options
 from shells.tray.native import enable_dark_titlebar
 from shells.tray.settings import LevelMeter, _select_by_data
 
@@ -102,7 +103,7 @@ class FirstRunWizard(QDialog):
         super().__init__(parent)
         self.config = config
         self.setWindowTitle(tr("wiz.title"))
-        self.setFixedSize(560, 470)
+        self.setFixedSize(560, 540)
 
         self._monitor: Recorder | None = None
         self._heard_something = False
@@ -227,31 +228,20 @@ class FirstRunWizard(QDialog):
 
         has_gpu = cuda_usable()
         gpu_blocked = cuda_available() and not has_gpu   # device present, libs missing
-        recommended = "large-v3-turbo" if has_gpu else "small"
-        options = (
-            [("large-v3-turbo", "0.8"), ("medium", "0.9"), ("small", "0.5")]
-            if has_gpu
-            else [("small", "2.5"), ("base", "0.9"), ("tiny", "0.5")]
-        )
-        self.model_combo = QComboBox()
-        rec_key = tr("wiz.model.rec_gpu") if has_gpu else tr("wiz.model.rec_cpu")
-        device_label = "GPU" if has_gpu else "CPU"
-        for name, latency in options:
-            speed = tr("wiz.model.per_phrase").format(sec=latency)
-            label = f"{name}  —  {speed}  ·  {device_label}"
-            if name == recommended:
-                label += f"  ·  {rec_key}"
-            self.model_combo.addItem(label, name)
-        self.model_combo.setCurrentIndex(0)
-        self.model_combo.currentIndexChanged.connect(self._on_model_changed)
-        layout.addWidget(self.model_combo)
+        options, note = machine_options()
         if gpu_blocked:
             # GPU detected but CUDA runtime libs are absent (e.g. packaged
             # CPU-only build): say so honestly instead of a silent fallback.
-            gpu_note = QLabel(tr("wiz.model.gpu_missing_libs"))
-            gpu_note.setObjectName("muted")
-            gpu_note.setWordWrap(True)
-            layout.addWidget(gpu_note)
+            note = tr("wiz.model.gpu_missing_libs")
+        default = "large-v3-turbo" if has_gpu else "small"
+        selected = (
+            self.config.model_size
+            if self.config.model_size in {o.name for o in options}
+            else default
+        )
+        self.model_picker = ModelPicker(options, selected, note)
+        self.model_picker.changed.connect(self._on_model_changed)
+        layout.addWidget(self.model_picker)
         layout.addSpacing(16)
 
         self.dl_label = QLabel("")
@@ -278,10 +268,7 @@ class FirstRunWizard(QDialog):
 
         self.hotkey_edit = QLineEdit(self.config.hotkey_ptt)
         self.hotkey_edit.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.hotkey_edit.setStyleSheet(
-            f"font-family: '{theme.FONT_MONO}'; font-size: 16px; color: {theme.ACCENT};"
-            f"border: 1px dashed {theme.ACCENT}; padding: 10px;"
-        )
+        self.hotkey_edit.setStyleSheet(_hotkey_style(theme.ACCENT))
         self.hotkey_edit.editingFinished.connect(self._save_hotkey)
         layout.addWidget(self.hotkey_edit)
         layout.addSpacing(14)
@@ -293,6 +280,12 @@ class FirstRunWizard(QDialog):
         self.training_edit.setFixedHeight(90)
         layout.addWidget(self.training_edit)
         layout.addStretch()
+
+        # The second product promise, said once, on the way out.
+        done_note = QLabel(tr("wiz.done_note"))
+        done_note.setObjectName("muted")
+        done_note.setWordWrap(True)
+        layout.addWidget(done_note)
         return page
 
     # -- navigation ----------------------------------------------------------
@@ -385,14 +378,14 @@ class FirstRunWizard(QDialog):
     # -- step 2: model -----------------------------------------------------------
 
     def _on_model_changed(self) -> None:
-        self.config.model_size = self.model_combo.currentData()
+        self.config.model_size = self.model_picker.current
         self.config.save()
         self._ensure_model()
 
     def _ensure_model(self) -> None:
         if self._downloading:
             return
-        self.config.model_size = self.model_combo.currentData()
+        self.config.model_size = self.model_picker.current
         engine = Engine(self.config)
         if engine.is_model_cached():
             self._download_ok = True
@@ -444,12 +437,13 @@ class FirstRunWizard(QDialog):
         if combo and validate_combo(combo):
             self.config.hotkey_ptt = combo
             self.config.save()
-            self.hotkey_edit.setStyleSheet(
-                f"font-family: '{theme.FONT_MONO}'; font-size: 16px; color: {theme.ACCENT};"
-                f"border: 1px dashed {theme.ACCENT}; padding: 10px;"
-            )
+            self.hotkey_edit.setStyleSheet(_hotkey_style(theme.ACCENT))
         else:
-            self.hotkey_edit.setStyleSheet(
-                f"font-family: '{theme.FONT_MONO}'; font-size: 16px; color: {theme.REC};"
-                f"border: 1px dashed {theme.REC}; padding: 10px;"
-            )
+            self.hotkey_edit.setStyleSheet(_hotkey_style(theme.REC))
+
+
+def _hotkey_style(color: str) -> str:
+    return (
+        f"font-family: '{theme.FONT_MONO}'; font-size: 16px; color: {color};"
+        f"border: 1px dashed {color}; padding: 10px;"
+    )

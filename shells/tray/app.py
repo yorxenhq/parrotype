@@ -15,7 +15,7 @@ from PySide6.QtWidgets import QApplication, QMenu, QSystemTrayIcon
 from core import Config, Engine, History, Recorder
 from core.audio import pick_input_device, probe_peak
 from core.config import app_data_dir
-from shells.tray import autostart, micguard, singleinstance, sounds, theme
+from shells.tray import autostart, micguard, singleinstance, sounds, theme, updates
 from shells.tray.hotkeys import HotkeyManager
 from shells.tray.i18n import current_language, set_language, tr
 from shells.tray.icons import TrayState, make_icon
@@ -59,6 +59,7 @@ class _Bridge(QObject):
     model_progress = Signal(int)         # download percent
     model_ready = Signal()
     self_check = Signal(str, str)        # title, body -> tray balloon
+    update_result = Signal(str)          # raw tag from the worker ("" = fetch failed)
 
 
 class TrayApp(QObject):
@@ -80,6 +81,7 @@ class TrayApp(QObject):
         self.bridge.model_progress.connect(self._on_model_progress)
         self.bridge.model_ready.connect(self._on_model_ready)
         self.bridge.self_check.connect(self._on_self_check_warning)
+        self.bridge.update_result.connect(self._on_update_result)
 
         self.recorder = Recorder(
             sample_rate=self.config.sample_rate,
@@ -108,6 +110,14 @@ class TrayApp(QObject):
         self._settings_language = current_language()
         self.wizard: FirstRunWizard | None = None
         self._build_tray()
+        # Notice persisted by a previous run — or clear it after an upgrade.
+        if self.config.update_available_tag:
+            if updates.is_newer(self.config.update_available_tag):
+                self._show_update_notice(self.config.update_available_tag)
+            else:
+                self.config.update_available_tag = ""
+                self.config.save()
+        QTimer.singleShot(updates.STARTUP_DELAY_MS, self._start_update_check)
         if os.environ.get("PARROTYPE_SELFTEST_WAV"):
             # Headless release check must not sit waiting in the wizard.
             self._preload_model()
@@ -125,6 +135,11 @@ class TrayApp(QObject):
         self.status_action = QAction(tr("tray.loading_model"))
         self.status_action.setEnabled(False)
         menu.addAction(self.status_action)
+
+        self.update_action = QAction("")
+        self.update_action.setVisible(False)
+        self.update_action.triggered.connect(updates.open_release_page)
+        menu.addAction(self.update_action)
         menu.addSeparator()
 
         self.copy_last_action = QAction(tr("tray.copy_last"))
@@ -155,6 +170,10 @@ class TrayApp(QObject):
         self.tray.show()
 
     def _retranslate_tray(self) -> None:
+        if self.config.update_available_tag:
+            self.update_action.setText(
+                tr("tray.update", ver=self.config.update_available_tag.lstrip("vV"))
+            )
         self.copy_last_action.setText(tr("tray.copy_last"))
         self.pause_action.setText(tr("tray.pause"))
         self.settings_action.setText(tr("tray.settings"))
@@ -163,13 +182,12 @@ class TrayApp(QObject):
         self._update_status()
 
     def _update_status(self) -> None:
-        device, compute = self.config.resolve_device()
+        device, _compute = self.config.resolve_device()
+        dev_label = "GPU" if device == "cuda" else "CPU"
         state = tr("tray.ready") if self.engine.model_loaded else tr("tray.model_not_loaded")
         if self.hotkeys.paused:
             state = tr("tray.paused")
-        self.status_action.setText(
-            f"{state} · {self.config.model_size} @ {device} ({compute})"
-        )
+        self.status_action.setText(f"{state} · {self.config.model_size} · {dev_label}")
 
     def _set_tray_state(self, state: TrayState) -> None:
         self.tray.setIcon(make_icon(state))
@@ -310,7 +328,7 @@ class TrayApp(QObject):
 
     def _language_label(self) -> str:
         lang = self.config.language
-        return "AUTO" if lang == "auto" else lang.upper()
+        return "auto" if lang == "auto" else lang.lower()
 
     def _on_ptt_pressed(self) -> None:
         self._start_recording(toggle=False)
@@ -443,6 +461,20 @@ class TrayApp(QObject):
 
     def _on_level(self, rms: float) -> None:
         self.overlay.push_level(rms)
+
+    # -- update check -------------------------------------------------------
+
+    def _start_update_check(self) -> None:
+        updates.start_background_check(self.config, self.bridge.update_result.emit)
+
+    def _on_update_result(self, tag: str) -> None:
+        newer = updates.apply_result(self.config, tag or None)
+        if newer:
+            self._show_update_notice(newer)
+
+    def _show_update_notice(self, tag: str) -> None:
+        self.update_action.setText(tr("tray.update", ver=tag.lstrip("vV")))
+        self.update_action.setVisible(True)
 
     # -- tray actions -------------------------------------------------------------
 

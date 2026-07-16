@@ -13,8 +13,8 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtCore import Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QColor, QDesktopServices, QPainter
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -39,9 +39,10 @@ from PySide6.QtWidgets import (
 )
 
 from core import APP_VERSION, Config, Engine, History, Recorder, list_input_devices
-from shells.tray import theme
+from shells.tray import theme, updates
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
+from shells.tray.modelpicker import SIZES, ModelOption, ModelPicker, machine_options
 from shells.tray.native import enable_dark_titlebar
 
 log = logging.getLogger(__name__)
@@ -93,7 +94,7 @@ class SettingsDialog(QDialog):
         self.config = config
         self.history = history
         self.setWindowTitle(tr("set.title"))
-        self.resize(760, 500)
+        self.resize(760, 560)
 
         self._monitor: Recorder | None = None
 
@@ -249,15 +250,22 @@ class SettingsDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
 
+        options, note = machine_options()
+        if self.config.model_size not in {o.name for o in options}:
+            # Hand-picked model outside the recommended trio (e.g. large-v3):
+            # show it as a fourth card so the selection stays honest.
+            size_n, size_unit = SIZES.get(self.config.model_size, ("—", "gb"))
+            options = [
+                *options,
+                ModelOption(self.config.model_size, "model.desc.other",
+                            "—", size_n, size_unit),
+            ]
+        self.model_picker = ModelPicker(options, self.config.model_size, note)
+        self.model_picker.changed.connect(self._save_model)
+        layout.addWidget(self.model_picker)
+
         form = QFormLayout()
         form.setSpacing(12)
-
-        self.model_combo = QComboBox()
-        self.model_combo.addItems(MODEL_SIZES)
-        if self.config.model_size in MODEL_SIZES:
-            self.model_combo.setCurrentText(self.config.model_size)
-        self.model_combo.currentIndexChanged.connect(self._save_model)
-        form.addRow(tr("set.model"), self.model_combo)
 
         self.device_combo = QComboBox()
         for code in ("auto", "cuda", "cpu"):
@@ -267,6 +275,7 @@ class SettingsDialog(QDialog):
         form.addRow(tr("set.device"), self.device_combo)
 
         layout.addLayout(form)
+        layout.addSpacing(6)
 
         context_label = QLabel(tr("set.context_label"))
         context_label.setObjectName("muted")
@@ -375,11 +384,51 @@ class SettingsDialog(QDialog):
         slogan = QLabel(tr("set.about_slogan"))
         slogan.setObjectName("muted")
         layout.addWidget(slogan)
+        layout.addSpacing(12)
 
         layout.addWidget(QLabel(tr("set.about_version", ver=APP_VERSION)))
+        layout.addSpacing(12)
+
         privacy = QLabel(tr("set.about_local"))
         privacy.setWordWrap(True)
         layout.addWidget(privacy)
+
+        if self.config.update_available_tag:
+            update_label = QLabel(
+                tr(
+                    "set.about_update",
+                    ver=self.config.update_available_tag.lstrip("vV"),
+                    url=updates.RELEASES_PAGE_URL,
+                )
+            )
+            update_label.setOpenExternalLinks(True)
+            layout.addWidget(update_label)
+
+        layout.addSpacing(8)
+        self.updates_check = QCheckBox(tr("set.updates_cb"))
+        self.updates_check.setChecked(self.config.check_updates)
+        self.updates_check.toggled.connect(self._save_updates)
+        layout.addWidget(self.updates_check)
+
+        updates_note = QLabel(tr("set.updates_note"))
+        updates_note.setObjectName("muted")
+        updates_note.setWordWrap(True)
+        layout.addWidget(updates_note)
+
+        layout.addSpacing(12)
+        free_line = QLabel(tr("set.about_free"))
+        free_line.setWordWrap(True)
+        layout.addWidget(free_line)
+        layout.addSpacing(12)
+        coffee_line = QLabel(tr("set.about_coffee"))
+        coffee_line.setObjectName("muted")
+        coffee_line.setWordWrap(True)
+        layout.addWidget(coffee_line)
+        coffee_btn = QPushButton(tr("set.about_coffee_btn"))   # plain button, NOT accent
+        coffee_btn.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl("https://ko-fi.com/eugene_vovk"))
+        )
+        layout.addWidget(coffee_btn, alignment=Qt.AlignmentFlag.AlignLeft)
         layout.addStretch()
         return page
 
@@ -416,9 +465,14 @@ class SettingsDialog(QDialog):
         self.config_changed.emit()
 
     def _save_model(self) -> None:
-        self.config.model_size = self.model_combo.currentText()
+        self.config.model_size = self.model_picker.current
         self.config.device = self.device_combo.currentData()
         self.config.compute_type = "auto"
+        self.config.save()
+        self.config_changed.emit()
+
+    def _save_updates(self) -> None:
+        self.config.check_updates = self.updates_check.isChecked()
         self.config.save()
         self.config_changed.emit()
 
@@ -514,7 +568,7 @@ class SettingsDialog(QDialog):
         self.latency_btn.setEnabled(False)
         self.latency_label.setText(tr("set.latency_running"))
 
-        model = self.model_combo.currentText()
+        model = self.model_picker.current
         device = self.device_combo.currentData()
 
         def worker() -> None:
@@ -527,10 +581,10 @@ class SettingsDialog(QDialog):
                 engine.load_model()
                 engine.transcribe(str(_TEST_WAV))            # warm-up
                 result = engine.transcribe(str(_TEST_WAV))   # measured run
-                dev, compute = cfg.resolve_device()
+                dev, _compute = cfg.resolve_device()
                 msg = tr(
                     "set.latency_result",
-                    model=model, dev=dev, compute=compute,
+                    model=model, dev="GPU" if dev == "cuda" else "CPU",
                     lat=f"{result.latency_seconds:.2f}",
                     dur=f"{result.audio_seconds:.0f}",
                 )

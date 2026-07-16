@@ -29,13 +29,13 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "couldn't insert — text is on the clipboard, press Ctrl+V",
     },
     "pill.no_speech": {
-        "ru": "речь не распознана — в записи не нашлось слов",
-        "en": "no speech recognized in the recording",
+        "ru": "не расслышал слов — попробуй ещё раз",
+        "en": "couldn't make out any words — try again",
     },
     "pill.mic_unavailable": {"ru": "микрофон недоступен: {err}", "en": "microphone unavailable: {err}"},
     "pill.mic_silent": {
-        "ru": "микрофон молчит (уровень ~0) — проверь mute и устройство в настройках",
-        "en": "the microphone is silent (level ~0) — check mute and the device in Settings",
+        "ru": "микрофон молчит — проверь mute и устройство в настройках",
+        "en": "the microphone is silent — check mute and the device in Settings",
     },
     "pill.mic_unmuted": {"ru": "микрофон включён — говори", "en": "microphone unmuted — go ahead"},
     "pill.transcribe_error": {"ru": "ошибка распознавания: {err}", "en": "recognition error: {err}"},
@@ -53,15 +53,16 @@ _STRINGS: dict[str, dict[str, str]] = {
     "tray.ready": {"ru": "Готов", "en": "Ready"},
     "tray.model_not_loaded": {"ru": "Модель не загружена", "en": "Model not loaded"},
     "tray.paused": {"ru": "Пауза", "en": "Paused"},
-    "tray.copy_last": {"ru": "Последняя диктовка → копировать", "en": "Copy last dictation"},
+    "tray.copy_last": {"ru": "Копировать последнюю диктовку", "en": "Copy last dictation"},
+    "tray.update": {"ru": "Вышла версия {ver} — скачать", "en": "Version {ver} is out — download"},
     "tray.pause": {"ru": "Пауза — не слушать хоткей", "en": "Pause — ignore the hotkey"},
     "tray.settings": {"ru": "Настройки…", "en": "Settings…"},
     "tray.history": {"ru": "История…", "en": "History…"},
     "tray.quit": {"ru": "Выход", "en": "Quit"},
     "tray.mic_silent_title": {"ru": "Микрофон молчит", "en": "Microphone is silent"},
     "tray.mic_silent_body": {
-        "ru": "Стартовая проверка: с микрофона идёт цифровая тишина. Проверь устройство в настройках.",
-        "en": "Startup check: the microphone delivers digital silence. Check the device in Settings.",
+        "ru": "Микрофон отдаёт полную тишину. Проверь устройство в настройках.",
+        "en": "The microphone is delivering pure silence. Check the device in Settings.",
     },
 
     # -- settings window ---------------------------------------------------
@@ -86,13 +87,12 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Typing keeps your clipboard untouched. If some app garbles the text, switch to clipboard.",
     },
     "set.microphone": {"ru": "Микрофон:", "en": "Microphone:"},
-    "set.mic_default": {"ru": "Системный по умолчанию", "en": "System default"},
+    "set.mic_default": {"ru": "Как в системе", "en": "System default"},
     "set.mic_level": {"ru": "Уровень:", "en": "Level:"},
     "set.autostart": {"ru": "Автозапуск:", "en": "Autostart:"},
     "set.autostart_cb": {"ru": "Запускать вместе с Windows", "en": "Start with Windows"},
     "set.sound": {"ru": "Звук:", "en": "Sound:"},
     "set.sound_cb": {"ru": "Щелчок при записи", "en": "Click on record"},
-    "set.model": {"ru": "Модель:", "en": "Model:"},
     "set.device": {"ru": "Устройство:", "en": "Device:"},
     "set.device.auto": {"ru": "Авто", "en": "Auto"},
     "set.device.cuda": {"ru": "GPU (CUDA)", "en": "GPU (CUDA)"},
@@ -119,8 +119,8 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Checking… (downloads the model first if needed)",
     },
     "set.latency_result": {
-        "ru": "{model} @ {dev} ({compute}): {lat}с на {dur}с аудио",
-        "en": "{model} @ {dev} ({compute}): {lat}s per {dur}s of audio",
+        "ru": "{model} на {dev}: {lat} с на {dur} с записи",
+        "en": "{model} on {dev}: {lat}s for {dur}s of audio",
     },
     "set.latency_fast": {"ru": " — быстро, можно жить.", "en": " — fast, you're set."},
     "set.latency_ok": {"ru": " — нормально.", "en": " — decent."},
@@ -157,14 +157,76 @@ _STRINGS: dict[str, dict[str, str]] = {
     "set.hist_clear_q": {"ru": "Удалить все записи истории?", "en": "Delete all history entries?"},
     "set.about_version": {"ru": "Версия {ver}", "en": "Version {ver}"},
     "set.about_local": {
-        "ru": "Всё происходит на этом компьютере. Твой голос и твой текст не уходят никуда — даже к нам.",
-        "en": "Everything happens on this computer. Your voice and your text go nowhere — not even to us.",
+        "ru": "Всё происходит на этом компьютере. Твой голос и твой текст не уходят никуда — даже к нам. "
+              "Сеть нужна только на два случая: скачать модель и раз в неделю спросить GitHub про новую версию — это можно выключить.",
+        "en": "Everything happens on this computer. Your voice and your text go nowhere — not even to us. "
+              "The network is used for two things only: downloading the model and a weekly ask to GitHub for a new version — you can turn that off.",
     },
     "set.about_slogan": {"ru": "You talk. The parrot types.", "en": "You talk. The parrot types."},
+    "set.about_free": {
+        "ru": "Бесплатно для всех — и останется бесплатным.",
+        "en": "Free for everyone — and staying that way.",
+    },
+    "set.about_coffee": {
+        "ru": "Если Parrotype экономит тебе время — можешь угостить Eugene кофе.",
+        "en": "If Parrotype saves you time, you can buy Eugene a coffee.",
+    },
+    "set.about_coffee_btn": {"ru": "Угостить кофе", "en": "Buy a coffee"},
+    "set.updates_cb": {"ru": "Проверять обновления раз в неделю", "en": "Check for updates once a week"},
+    "set.updates_note": {
+        "ru": "Один анонимный запрос к GitHub, ничего о тебе не отправляется.",
+        "en": "One anonymous request to GitHub; nothing about you is sent.",
+    },
+    "set.about_update": {
+        "ru": 'Вышла версия {ver} — <a href="{url}">скачать на GitHub</a>',
+        "en": 'Version {ver} is out — <a href="{url}">get it on GitHub</a>',
+    },
+
+    # -- model picker ---------------------------------------------------------
+    "model.rec": {"ru": "рекомендуем", "en": "recommended"},
+    "model.meta.speed": {"ru": "~{sec} с на фразу", "en": "~{sec}s per phrase"},
+    "model.meta.size_mb": {"ru": "скачать ~{n} МБ", "en": "~{n} MB download"},
+    "model.meta.size_gb": {"ru": "скачать ~{n} ГБ", "en": "~{n} GB download"},
+    "model.desc.gpu.turbo": {
+        "ru": "лучше всего слышит — видеокарте это легко",
+        "en": "hears best — easy work for your graphics card",
+    },
+    "model.desc.gpu.medium": {
+        "ru": "золотая середина — чуть меньше скачивать",
+        "en": "the middle ground — a slightly smaller download",
+    },
+    "model.desc.gpu.small": {
+        "ru": "самая лёгкая — если место на диске дорого",
+        "en": "the lightest one — if disk space is tight",
+    },
+    "model.desc.cpu.small": {
+        "ru": "лучше всего слышит, чуть дольше думает",
+        "en": "hears best, takes a moment longer",
+    },
+    "model.desc.cpu.base": {
+        "ru": "золотая середина — быстро и вполне точно",
+        "en": "the middle ground — quick and fairly accurate",
+    },
+    "model.desc.cpu.tiny": {
+        "ru": "самая лёгкая — для слабых машин",
+        "en": "the lightest one — for weaker machines",
+    },
+    "model.desc.other": {
+        "ru": "выбрана вручную — вне рекомендованного набора",
+        "en": "picked by hand — outside the recommended set",
+    },
+    "model.device_note.cpu": {
+        "ru": "Распознавать будет процессор — видеокарта NVIDIA не найдена.",
+        "en": "Recognition runs on the processor — no NVIDIA graphics card found.",
+    },
+    "model.device_note.gpu": {
+        "ru": "Распознавать будет видеокарта NVIDIA — самый быстрый вариант.",
+        "en": "Recognition runs on your NVIDIA graphics card — the fastest option.",
+    },
 
     # -- wizard --------------------------------------------------------------
     "wiz.title": {"ru": "Parrotype — первый запуск", "en": "Parrotype — first run"},
-    "wiz.step": {"ru": "ШАГ {n} · 3", "en": "STEP {n} · 3"},
+    "wiz.step": {"ru": "шаг {n} из 3", "en": "step {n} of 3"},
     "wiz.mic.title": {"ru": "Микрофон", "en": "Microphone"},
     "wiz.mic.desc": {
         "ru": "Скажи что-нибудь — полоски должны двигаться.",
@@ -182,12 +244,9 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "wiz.model.title": {"ru": "Модель", "en": "Model"},
     "wiz.model.desc": {
-        "ru": "Выбери модель распознавания. Рекомендация — по живому замеру этого компьютера. Модель скачивается один раз и хранится только на этом устройстве.",
-        "en": "Choose the speech recognition model. The recommendation comes from a live benchmark of this computer. The model downloads once and stays on this device.",
+        "ru": "Скачивается один раз и живёт только на этом компьютере.",
+        "en": "Downloads once and lives only on this computer.",
     },
-    "wiz.model.rec_gpu": {"ru": "рекомендуем", "en": "Recommended"},
-    "wiz.model.rec_cpu": {"ru": "рекомендуем", "en": "Recommended"},
-    "wiz.model.per_phrase": {"ru": "~{sec} с на фразу", "en": "~{sec} s per phrase"},
     "wiz.model.downloading": {"ru": "Скачиваю модель — {pct}%", "en": "Downloading model — {pct}%"},
     "wiz.model.cached": {"ru": "Модель уже скачана.", "en": "Model already downloaded."},
     "wiz.model.gpu_missing_libs": {
@@ -199,12 +258,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "Download failed — check your internet connection and try again.",
     },
     "wiz.model.retry": {"ru": "Повторить", "en": "Retry"},
-    "wiz.hotkey.title": {"ru": "Хоткей и проба", "en": "Hotkey & try it"},
+    "wiz.hotkey.title": {"ru": "Хоткей и первая диктовка", "en": "Hotkey & first dictation"},
     "wiz.hotkey.desc": {
         "ru": "Зажми и держи, чтобы говорить:",
         "en": "Press and hold to talk:",
     },
     "wiz.hotkey.try": {"ru": "Попробуй продиктовать сюда:", "en": "Try dictating here:"},
+    "wiz.done_note": {
+        "ru": "Parrotype бесплатный для всех. Понравится — в «О программе» можно угостить автора кофе.",
+        "en": "Parrotype is free for everyone. If you end up liking it, there's a coffee button in About.",
+    },
     "wiz.next": {"ru": "Дальше", "en": "Next"},
     "wiz.done": {"ru": "Готово", "en": "Done"},
     "wiz.back": {"ru": "Назад", "en": "Back"},

@@ -73,7 +73,7 @@ class OverlayPill(QWidget):
 
         self.state = OverlayState.HIDDEN
         self.toggle_mode = False
-        self.language_label = "AUTO"
+        self.language_label = "auto"
         self.hint_text = ""
         self.preview_text = ""
         self.status_text = ""
