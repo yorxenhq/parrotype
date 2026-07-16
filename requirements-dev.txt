@@ -6,4 +6,6 @@ pywinauto>=0.6.9
 pyinstaller>=6.10
 # dev/test-time tool, never shipped with the product:
 edge-tts>=7.0       # language-gate test speech (GPL-3.0 — dev tool only)
+fonttools>=4.50     # site font subsetting (docs/site/fonts), dev tool only
+brotli>=1.1         # woff2 compression for the above
 

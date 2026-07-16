@@ -8,6 +8,9 @@
 
 <p align="center">Voice dictation for Windows that runs entirely on your machine. Free, no account, no cloud.</p>
 
+<!-- активируется при публикации: GitHub Pages (Settings -> Pages -> Source: GitHub Actions) -->
+<p align="center"><a href="https://yorxenhq.github.io/parrotype/">Website</a> · <a href="https://yorxenhq.github.io/parrotype/guide.html">Guide</a></p>
+
 <p align="center">
   <a href="https://github.com/yorxenhq/parrotype/releases/latest"><img src="https://img.shields.io/github/v/release/yorxenhq/parrotype?color=4FD1B0" alt="latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/yorxenhq/parrotype?color=2E2E36" alt="license: MIT"></a>

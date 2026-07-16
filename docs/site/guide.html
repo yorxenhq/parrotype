@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#101014">
+<title>Parrotype guide — setup, everyday use, troubleshooting</title>
+<meta name="description" content="From download to first dictation in three minutes, plus everything the app can do and fixes for the four things that ever go wrong.">
+<link rel="canonical" href="https://yorxenhq.github.io/parrotype/guide.html">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Parrotype guide — setup, everyday use, troubleshooting">
+<meta property="og:description" content="From download to first dictation in three minutes, plus everything the app can do and fixes for the four things that ever go wrong.">
+<meta property="og:image" content="https://yorxenhq.github.io/parrotype/og.png">
+<meta property="og:url" content="https://yorxenhq.github.io/parrotype/guide.html">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{--bg:#101014;--surface:#17171C;--text:#ECECF1;--muted:#9A9AA6;--line:#2E2E36;--accent:#4FD1B0;--rec:#FF5C5C}
+@font-face{font-family:"Space Grotesk";src:url(fonts/space-grotesk.woff2) format("woff2");font-weight:300 700;font-display:swap}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:400 1.0625rem/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;margin:0}
+h1,h2,h3{font-family:"Space Grotesk","Segoe UI",sans-serif;font-weight:500;line-height:1.15;letter-spacing:-.015em}
+h1{font-size:2.2rem;margin:2.5rem 0 .6rem}
+h2{font-size:1.6rem;margin:4rem 0 1rem;padding-top:1rem;border-top:1px solid var(--line)}
+h3{font-size:1.15rem;margin:2.4rem 0 .6rem}
+code,kbd,pre{font-family:"Cascadia Code","Cascadia Mono",Consolas,ui-monospace,monospace}
+code{background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:.1em .35em;font-size:.9em}
+kbd{background:var(--surface);border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:.1em .45em;font-size:.85em}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+::selection{background:#4FD1B033}
+main{max-width:44rem;margin:0 auto;padding:0 1.25rem}
+img{max-width:100%;border:1px solid var(--line);border-radius:12px;margin:.6rem 0 .4rem}
+ul{padding-left:1.3rem}
+li{margin:.4rem 0}
+.muted{color:var(--muted)}
+.toc{color:var(--muted)}
+.toc a{margin-right:.4rem}
+header.site{display:flex;align-items:center;justify-content:space-between;gap:1rem;max-width:52rem;margin:0 auto;padding:1.1rem 1.25rem}
+header.site .brand{display:flex;align-items:center;gap:.55rem;color:var(--text);font-family:"Space Grotesk","Segoe UI",sans-serif;font-size:1rem}
+header.site .brand:hover{text-decoration:none}
+header.site nav{display:flex;gap:1.4rem;font-size:.95rem}
+footer{max-width:52rem;margin:4.5rem auto 0;padding:1.4rem 1.25rem 2.2rem;color:var(--muted);font-size:.9rem;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <a class="brand" href="./">
+    <svg viewBox="0 0 96 96" width="24" height="24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"/><rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"/><path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"/></svg>
+    Parrotype
+  </a>
+  <nav>
+    <a href="./">Home</a>
+    <a href="https://github.com/yorxenhq/parrotype" rel="noopener">GitHub</a>
+  </nav>
+</header>
+
+<main>
+
+<h1>Parrotype guide</h1>
+<p class="toc">
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#everyday-use">Everyday use</a> ·
+  <a href="#troubleshooting">Troubleshooting</a>
+</p>
+<p class="muted">Everything about Parrotype fits on this page. Ctrl+F is your friend.</p>
+
+<h2 id="getting-started">Getting started</h2>
+
+<h3>1. Download and install</h3>
+<p>Grab <a href="https://github.com/yorxenhq/parrotype/releases/latest" rel="noopener">ParrotypeSetup.exe</a> and run it. Windows SmartScreen will warn about an unknown publisher — the installer isn't code-signed yet. Click <strong>More info → Run anyway</strong>. (Why this happens — <a href="#smartscreen">see Troubleshooting</a>.)</p>
+
+<h3>2. First-run wizard — step 1: Microphone</h3>
+<p>Say something — the bars should move. When you see <em>"✓ hearing you — good level"</em>, you're good. No microphone found? Plug one in and come back to this step.</p>
+<p>Everything runs on your machine — your voice never leaves it.</p>
+<img src="img/wizard-1-mic.png" width="1100" alt="First-run wizard step 1: microphone check with a live level meter">
+
+<h3>3. Step 2: Model</h3>
+<p>Parrotype checks your hardware and recommends a model: with an NVIDIA graphics card recognition runs on GPU (fastest), otherwise on CPU. The model downloads once — ~75 MB to ~3 GB depending on which you pick — and lives only on this computer. You can change it later in Settings and measure real speed on your machine.</p>
+<img src="img/wizard-2-model.png" width="1100" alt="First-run wizard step 2: model cards with a recommended badge and download progress">
+
+<h3>4. Step 3: Hotkey and first dictation</h3>
+<p>Hold <kbd>Ctrl</kbd>+<kbd>Alt</kbd>, say a sentence into the test field, release. The text appears — that's the whole workflow. From now on it works in any window: editor, browser, chat, terminal.</p>
+<img src="img/wizard-3-hotkey.png" width="1100" alt="First-run wizard step 3: hotkey and a test field with a recognized phrase">
+
+<h2 id="everyday-use">Everyday use</h2>
+
+<h3>Two ways to talk</h3>
+<ul>
+  <li><strong>Hold to talk:</strong> hold <kbd>Ctrl</kbd>+<kbd>Alt</kbd>, speak, release — text is inserted where your cursor is.</li>
+  <li><strong>Hands-free:</strong> press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> to start, press again to stop.</li>
+  <li><strong>Changed your mind:</strong> <kbd>Esc</kbd> cancels the recording — nothing gets inserted.</li>
+</ul>
+<p>Both hotkeys are editable in <strong>Settings → General</strong> (formats like <code>ctrl+alt</code>, <code>ctrl+shift+space</code>). The little pill at the bottom of the screen shows what's happening — listening, transcribing, inserted. It never steals focus.</p>
+<img src="img/pill-states.png" width="1100" alt="The overlay pill states: listening, transcribing, model download, inserted, error">
+
+<h3>Teach it your words</h3>
+<p>Two tools:</p>
+<ul>
+  <li><strong>Replacement dictionary</strong> — <strong>Settings → Dictionary</strong>: exact fixes, left is what you say (<em>Heard</em>), right is what should be typed (<em>Written</em>). E.g. “clod” → Claude, and it will always be written that way.</li>
+  <li><strong>Your words and names</strong> — <strong>Settings → Model</strong>: a free-text field for anything you dictate often: products, surnames, jargon (<em>Claude Code, Cloudflare, Kubernetes…</em>). The model uses it as context and spells them right. Dictionary entries feed it automatically.</li>
+</ul>
+<img src="img/settings-dictionary.png" width="1100" alt="Settings, Dictionary tab: Heard/Written replacement rows">
+
+<h3>Recognition language</h3>
+<p><strong>Settings → General → Recognition language.</strong> Fourteen languages that passed a measured quality gate — English, Russian, Spanish, German, French, Italian, Portuguese, Polish, Ukrainian, Dutch, Turkish, Japanese, Korean, Chinese — plus auto-detect for the 90+ languages Whisper knows.</p>
+
+<h3>How text gets inserted</h3>
+<p>Two methods in <strong>Settings → General → Insert method</strong>:</p>
+<ul>
+  <li><strong>Types like a keyboard</strong> (default) — your clipboard is never touched.</li>
+  <li><strong>Pastes via clipboard</strong> — pastes the text, then puts whatever you had copied back.</li>
+</ul>
+<p>If some app garbles the typed text, switch to clipboard — that's what it's for.</p>
+
+<h3>History</h3>
+<p>Tray icon → <strong>History</strong>, or Settings → History. The last 50 dictations, stored locally — click a card to copy it, hover for delete, or clear everything at once. The tray menu also has <strong>Copy last dictation</strong> for the “wait, what did I just say” moment. Don't want a trail? Untick <em>Remember recent dictations</em>.</p>
+<img src="img/settings-history.png" width="1100" alt="Settings, History tab: dictation cards with copy-on-click and delete">
+
+<h3>The tray menu</h3>
+<p>Right-click the parrot: <strong>Copy last dictation</strong>, <strong>Pause</strong> (ignore the hotkey — useful before a call), <strong>Settings</strong>, <strong>History</strong>, <strong>Quit</strong>. The icon shows state: idle, recording, paused.</p>
+<img src="img/tray-menu.png" alt="The tray context menu: status line, copy last dictation, pause, settings, history, quit">
+
+<h3>Model and speed</h3>
+<p><strong>Settings → Model</strong> — pick a model and hit <strong>Check speed</strong>: it measures this model on this computer and tells you honestly whether it's fast, decent, or you should pick a smaller one. Recognition device (GPU/CPU/auto) is here too.</p>
+<img src="img/settings-model.png" width="1100" alt="Settings, Model tab: model cards, device selector and the Check speed result">
+
+<h3>Small comforts</h3>
+<p>Autostart with Windows and the record-click sound are both in <strong>Settings → General</strong>. UI language (English/Russian) follows your system, or set it by hand.</p>
+<img src="img/settings-general.png" width="1100" alt="Settings, General tab: hotkeys, languages, insert method, microphone with level meter, autostart, sound">
+
+<h2 id="troubleshooting">Troubleshooting</h2>
+
+<h3 id="mic">The microphone is silent</h3>
+<ul>
+  <li>The pill says <em>"microphone is muted by the system"</em> — click the pill, it unmutes.</li>
+  <li>Still nothing? Open <strong>Settings → General</strong> and watch the level meter while talking. Try picking the device explicitly instead of <em>System default</em>.</li>
+  <li>Level dead in every app? Check Windows: <strong>Settings → Privacy &amp; security → Microphone</strong> — microphone access must be on for desktop apps.</li>
+</ul>
+<img src="img/settings-mic-level.png" alt="The microphone selector and live level meter in Settings, General">
+
+<h3 id="smartscreen">SmartScreen blocks the installer</h3>
+<p>Windows warns because the installer isn't code-signed — a signing certificate costs real money every year, and Parrotype is free. The warning means "unknown publisher", not "malware". Click <strong>More info → Run anyway</strong>. Prefer to trust code, not words? The source is public — <a href="https://github.com/yorxenhq/parrotype#readme" rel="noopener">build it yourself</a> in four commands.</p>
+
+<h3 id="slow">Recognition is slow on my machine</h3>
+<p>Use <strong>Settings → Model → Check speed</strong> — it gives you a real number for your hardware. If it says slow, pick a smaller model: quality drops a little, speed jumps a lot. On CPU, <code>small</code> is the sane default; <code>base</code> and <code>tiny</code> are lighter still. Got an NVIDIA card? The GPU build (from source, CUDA 12) does a 13-second phrase in about 0.8 s.</p>
+
+<h3 id="garbled">Text comes out broken in one specific app</h3>
+<p>Switch <strong>Settings → General → Insert method</strong> to <em>Pastes via clipboard</em>. Some apps mishandle simulated typing; the clipboard route is bulletproof, and your previous clipboard is restored afterwards.</p>
+<p>If the pill ever says <em>"couldn't insert — text is on the clipboard"</em> — the text is already copied, just press <kbd>Ctrl</kbd>+<kbd>V</kbd>.</p>
+
+<p class="muted">Didn't find your case? <a href="https://github.com/yorxenhq/parrotype/issues" rel="noopener">Open an issue</a> — describe what you did and what you saw.</p>
+
+</main>
+
+<footer>
+  <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="https://github.com/yorxenhq/parrotype" rel="noopener">GitHub</a> · <a href="https://ko-fi.com/eugene_vovk" rel="noopener">Ko-fi</a>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "name": "Parrotype guide — setup, everyday use, troubleshooting",
+  "description": "From download to first dictation in three minutes, plus everything the app can do and fixes for the four things that ever go wrong.",
+  "image": "https://yorxenhq.github.io/parrotype/og.png",
+  "url": "https://yorxenhq.github.io/parrotype/guide.html"
+}
+</script>
+
+</body>
+</html>

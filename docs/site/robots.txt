@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yorxenhq.github.io/parrotype/sitemap.xml
