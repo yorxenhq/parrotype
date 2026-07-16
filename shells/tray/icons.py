@@ -87,6 +87,20 @@ def make_pixmap(size: int, state: TrayState = TrayState.IDLE) -> QPixmap:
     return pixmap
 
 
+def make_ghost_pixmap(size: int, mark: str = "#6B6B76", eye_bg: str = "#191920") -> QPixmap:
+    """The full mark (with the eye) recolored as quiet chrome — used for the
+    settings sidebar footer. The eye is a hole, so it takes the panel colour."""
+    svg = _read_svg("logo.svg", _LOGO_SVG)
+    svg = svg.replace(theme.ACCENT, mark).replace("#101014", eye_bg)
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    renderer = QSvgRenderer(svg.encode("utf-8"))
+    painter = QPainter(pixmap)
+    renderer.render(painter)
+    painter.end()
+    return pixmap
+
+
 def make_icon(state: TrayState = TrayState.IDLE) -> QIcon:
     icon = QIcon()
     for size in (16, 24, 32, 48, 64, 256):

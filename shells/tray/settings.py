@@ -293,13 +293,14 @@ class SettingsDialog(QDialog):
         foot.setContentsMargins(16, 10, 12, 14)
         foot.setSpacing(8)
         logo = QLabel()
-        # Ghost at 35% opacity, baked into the pixmap (a QGraphicsOpacityEffect
-        # is dropped by offscreen QWidget.render, which the preview scripts use).
-        mark = icons.make_pixmap(28)            # 28 < 48 -> logo-small.svg (no eye)
+        # Full mark (with the eye = premium version), recolored to quiet grey
+        # and dimmed to 45% — a signature, not a logo. Opacity is baked into
+        # the pixmap (QGraphicsOpacityEffect is dropped by offscreen render).
+        mark = icons.make_ghost_pixmap(28)
         ghost = QPixmap(mark.size())
         ghost.fill(Qt.GlobalColor.transparent)
         ghost_painter = QPainter(ghost)
-        ghost_painter.setOpacity(0.35)
+        ghost_painter.setOpacity(0.45)
         ghost_painter.drawPixmap(0, 0, mark)
         ghost_painter.end()
         logo.setPixmap(ghost)
@@ -854,7 +855,7 @@ class SettingsDialog(QDialog):
                 background: {theme.LINE}; color: {theme.ACCENT};
                 border-left: 2px solid {theme.ACCENT};
             }}
-            QLabel#sideversion {{ color: {theme.MUTED}; font-size: 11px; }}
+            QLabel#sideversion {{ color: #6B6B76; font-size: 11px; }}
             """
         )
 
