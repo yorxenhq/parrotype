@@ -11,10 +11,16 @@ to a log file at the *fd* level before anything heavy is imported.
 import os
 import sys
 
-# ctranslate2 and onnxruntime each bundle an OpenMP runtime; duplicate
-# runtimes in one frozen process can intermittently access-violate on
-# CPU decode. The standard mitigation, set before either library loads:
+# ctranslate2 (Intel OpenMP / libiomp5md) and onnxruntime (the bundled
+# Silero VAD) each run their own thread pool. Intel OpenMP threads
+# SPIN-WAIT by default (KMP_BLOCKTIME=200ms) after a parallel region;
+# those spinning threads race the onnxruntime VAD pool and intermittently
+# access-violate on CPU inference in the packaged build. Make OpenMP
+# threads sleep instead of spin, and allow the duplicate runtime. Must be
+# set before ctranslate2/onnxruntime are imported (i.e. here, first).
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("KMP_BLOCKTIME", "0")
+os.environ.setdefault("OMP_WAIT_POLICY", "PASSIVE")
 
 
 def _stream_ok(stream) -> bool:

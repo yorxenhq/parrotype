@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import dataclasses
+import functools
 import json
 import logging
 import os
+import threading
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -114,24 +116,35 @@ class Config:
         return device, compute
 
 
+# Hardware probing loads native CUDA libraries and inits the CUDA driver
+# via ctypes/ctranslate2. Doing that repeatedly, from both the GUI thread
+# (status) and the transcription worker, races inside the driver and
+# access-violates in packaged builds. Probe ONCE, cache the result, and
+# guard even the first call so two threads can't probe concurrently.
+_probe_lock = threading.Lock()
+
+
+@functools.lru_cache(maxsize=1)
 def cuda_available() -> bool:
-    """True when ctranslate2 sees a CUDA device (driver-level only).
+    """True when ctranslate2 sees a CUDA device (driver-level only). Cached.
 
     NOTE: this does NOT mean inference will work — the runtime libraries
     (cuBLAS/cuDNN) may be missing (e.g. the CPU-only packaged build on a
     GPU machine). Use cuda_usable() for decisions.
     """
-    try:
-        import ctranslate2
+    with _probe_lock:
+        try:
+            import ctranslate2
 
-        return ctranslate2.get_cuda_device_count() > 0
-    except Exception as exc:  # pragma: no cover - defensive: any backend error means "no CUDA"
-        log.debug("CUDA probe failed: %s", exc)
-        return False
+            return ctranslate2.get_cuda_device_count() > 0
+        except Exception as exc:  # pragma: no cover - any backend error means "no CUDA"
+            log.debug("CUDA probe failed: %s", exc)
+            return False
 
 
+@functools.lru_cache(maxsize=1)
 def cuda_usable() -> bool:
-    """Real GPU probe: device present AND the CUDA runtime DLLs load.
+    """Real GPU probe: device present AND the CUDA runtime DLLs load. Cached.
 
     Catches the packaged-build trap where a GPU is detected but
     cublas/cudnn are absent — model load would fail and silently fall
@@ -144,14 +157,15 @@ def cuda_usable() -> bool:
 
     if _sys.platform != "win32":
         return True
-    # Engine import registers pip-wheel DLL dirs on PATH; probe the exact
-    # libraries ctranslate2 loads lazily at model init.
-    import core.engine  # noqa: F401  (side effect: DLL dirs on PATH)
+    with _probe_lock:
+        # Engine import registers pip-wheel DLL dirs on PATH; probe the exact
+        # libraries ctranslate2 loads lazily at model init.
+        import core.engine  # noqa: F401  (side effect: DLL dirs on PATH)
 
-    for dll in ("cublas64_12.dll", "cudnn64_9.dll"):
-        try:
-            ctypes.WinDLL(dll)
-        except OSError:
-            log.info("CUDA device present but %s is missing — GPU unusable", dll)
-            return False
-    return True
+        for dll in ("cublas64_12.dll", "cudnn64_9.dll"):
+            try:
+                ctypes.WinDLL(dll)
+            except OSError:
+                log.info("CUDA device present but %s is missing — GPU unusable", dll)
+                return False
+        return True

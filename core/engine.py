@@ -193,13 +193,42 @@ class Engine:
 
     # -- transcription ---------------------------------------------------
 
+    def _trim_silence(self, audio: "np.ndarray") -> "np.ndarray":
+        """Trim leading/trailing quiet with a numpy energy gate.
+
+        Replaces faster-whisper's Silero VAD: its onnxruntime session
+        intermittently access-violated on CPU in the packaged build (~15%).
+        A frame-RMS gate cuts the quiet tail/head — which is what actually
+        mattered (a breathing/mumble tail decoded into hallucinated words)
+        — deterministically, with no native VAD dependency.
+        """
+        sr = self.config.sample_rate
+        frame = max(1, int(0.03 * sr))                 # 30 ms frames
+        pad = int(0.2 * sr)                            # keep 200 ms around speech
+        n = len(audio)
+        if n < frame * 2:
+            return audio
+        trimmed = n - (n % frame)
+        frames = audio[:trimmed].reshape(-1, frame)
+        rms = np.sqrt(np.mean(frames * frames, axis=1) + 1e-12)
+        peak = float(rms.max())
+        gate = max(0.01, 0.08 * peak)                  # relative + absolute floor
+        speech = np.where(rms > gate)[0]
+        if speech.size == 0:
+            return audio                               # all quiet: let whisper decide
+        start = max(0, speech[0] * frame - pad)
+        end = min(n, (speech[-1] + 1) * frame + pad)
+        return np.ascontiguousarray(audio[start:end], dtype=np.float32)
+
     def transcribe(self, audio: AudioInput) -> TranscriptionResult:
         """Transcribe a WAV file path or a float32 mono 16 kHz numpy array."""
         self.load_model()
         assert self._model is not None
 
         if isinstance(audio, np.ndarray):
-            audio_data: AudioInput = np.ascontiguousarray(audio, dtype=np.float32)
+            audio_data: AudioInput = self._trim_silence(
+                np.ascontiguousarray(audio, dtype=np.float32)
+            )
             audio_seconds = len(audio_data) / self.config.sample_rate
         else:
             audio_data = str(audio)
@@ -211,20 +240,19 @@ class Engine:
         segments_iter, info = self._model.transcribe(
             audio_data,
             language=language,
-            # Silero VAD (bundled): tuned so a quiet trailing tail (breathing,
-            # mumble, room noise after the last word) is cut instead of being
-            # decoded into hallucinated words.
-            vad_filter=True,
-            vad_parameters={
-                "threshold": 0.5,
-                "min_silence_duration_ms": 500,
-                "speech_pad_ms": 200,
-                "min_speech_duration_ms": 250,
-            },
-            beam_size=5,
-            # Anti-hallucination set for dictation:
+            # No onnxruntime VAD: the quiet tail is already trimmed in numpy
+            # (_trim_silence) before this call. The Silero VAD crashed the
+            # packaged CPU build intermittently; the trim + the decode guards
+            # below cover the same hallucination-on-silence case.
+            vad_filter=False,
+            # Greedy single-pass decode. beam search + the temperature
+            # fallback cascade intermittently access-violated ctranslate2's
+            # CPU int8 kernels in the packaged build (~15%); the warm-up,
+            # which uses exactly beam_size=1/temperature=0, never crashes.
+            # Quality on dictation-length audio is effectively identical.
+            beam_size=1,
             condition_on_previous_text=False,     # no cross-segment drift
-            temperature=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0],  # greedy first, fallback cascade
+            temperature=0.0,
             no_speech_threshold=0.6,              # drop segments the model deems non-speech
             log_prob_threshold=-1.0,              # reject low-confidence decodes
             compression_ratio_threshold=2.4,      # reject repetitive gibberish

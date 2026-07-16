@@ -272,6 +272,8 @@ class TrayApp(QObject):
                 result = self.engine.transcribe(audio)
             log.info("SELFTEST OK: %r", result.text[:120])
             code = 0
+            if os.environ.get("PARROTYPE_SELFTEST_FULL"):
+                code = self._selftest_full_paths(result.text)
         except Exception:
             log.exception("SELFTEST FAILED")
             code = 3
@@ -279,6 +281,22 @@ class TrayApp(QObject):
         # and a test hook should terminate unconditionally anyway.
         logging.shutdown()
         os._exit(code)
+
+    def _selftest_full_paths(self, text: str) -> int:
+        """Exercise the READ-ONLY ctypes probes the plain selftest skips,
+        each wrapped in a log line so a silent native crash names its
+        culprit. Must NOT inject keystrokes: SendInput would leak into
+        whatever window has focus (it once typed into the user's chat)."""
+        from shells.tray import micguard
+        from shells.tray.wininput import modifiers_down, user_idle_seconds
+
+        log.info("FULL: step mute-check (pycaw/comtypes)")
+        _ = micguard.default_mic_muted()
+        log.info("FULL: step modifiers (GetAsyncKeyState, read-only)")
+        _ = modifiers_down()
+        _ = user_idle_seconds()
+        log.info("FULL SELFTEST OK")
+        return 0
 
     def _on_model_progress(self, pct: int) -> None:
         text = tr("pill.downloading_model", pct=pct)
@@ -561,6 +579,11 @@ def main() -> int:
         return 1
 
     theme.load_fonts()
+    # Prime the hardware probe once, single-threaded, before any worker or
+    # the GUI can call it concurrently — the native CUDA probe is not safe
+    # to run from two threads at once (it access-violated packaged builds).
+    from core.config import cuda_usable
+    cuda_usable()
     tray_app = TrayApp(app)
     app.setStyleSheet(theme.app_qss())
     tray_app._update_status()
