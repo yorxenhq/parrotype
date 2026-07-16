@@ -182,11 +182,12 @@ _STRINGS: dict[str, dict[str, str]] = {
     },
     "wiz.model.title": {"ru": "Модель", "en": "Model"},
     "wiz.model.desc": {
-        "ru": "Рекомендация под это железо. Модель скачается один раз.",
-        "en": "Recommended for this hardware. The model downloads once.",
+        "ru": "Выбери модель распознавания. Рекомендация — по живому замеру этого компьютера. Модель скачивается один раз и хранится только на этом устройстве.",
+        "en": "Choose the speech recognition model. The recommendation comes from a live benchmark of this computer. The model downloads once and stays on this device.",
     },
-    "wiz.model.rec_gpu": {"ru": "РЕКОМЕНДУЕМ · GPU", "en": "RECOMMENDED · GPU"},
-    "wiz.model.rec_cpu": {"ru": "РЕКОМЕНДУЕМ · CPU", "en": "RECOMMENDED · CPU"},
+    "wiz.model.rec_gpu": {"ru": "рекомендуем", "en": "Recommended"},
+    "wiz.model.rec_cpu": {"ru": "рекомендуем", "en": "Recommended"},
+    "wiz.model.per_phrase": {"ru": "~{sec} с на фразу", "en": "~{sec} s per phrase"},
     "wiz.model.downloading": {"ru": "Скачиваю модель — {pct}%", "en": "Downloading model — {pct}%"},
     "wiz.model.cached": {"ru": "Модель уже скачана.", "en": "Model already downloaded."},
     "wiz.model.gpu_missing_libs": {

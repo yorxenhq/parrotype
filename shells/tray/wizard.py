@@ -9,7 +9,8 @@ from __future__ import annotations
 import logging
 import threading
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import QEasingCurve, Qt, QTimer, QVariantAnimation, Signal
+from PySide6.QtGui import QColor, QPainter, QPen
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -35,6 +36,59 @@ from shells.tray.settings import LevelMeter, _select_by_data
 log = logging.getLogger(__name__)
 
 _LEVEL_OK = 0.02      # RMS above this = "hearing you"
+
+_DOT = 8              # stepper dot diameter, px
+_DOT_GAP = 8
+
+
+class StepperDots(QWidget):
+    """Equal-size step dots: active = accent fill, inactive = 1.5px outline.
+
+    The active state slides between dots with a soft 180ms ease-out.
+    """
+
+    def __init__(self, count: int = 3, parent=None) -> None:  # noqa: ANN001
+        super().__init__(parent)
+        self._count = count
+        self._pos = 0.0            # animated active index
+        self.setFixedSize(count * _DOT + (count - 1) * _DOT_GAP + 3, _DOT + 4)
+        self._anim = QVariantAnimation(self)
+        self._anim.setDuration(theme.ANIM_MS)
+        self._anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        self._anim.valueChanged.connect(self._on_anim)
+
+    def set_active(self, index: int) -> None:
+        self._anim.stop()
+        self._anim.setStartValue(self._pos)
+        self._anim.setEndValue(float(index))
+        self._anim.start()
+
+    def _on_anim(self, value) -> None:  # noqa: ANN001
+        self._pos = float(value)
+        self.update()
+
+    def paintEvent(self, event) -> None:  # noqa: N802, ANN001
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        cy = self.height() / 2
+        for i in range(self._count):
+            cx = 1.5 + _DOT / 2 + i * (_DOT + _DOT_GAP)
+            # proximity of the animated active position to this dot: 0..1
+            t = max(0.0, 1.0 - abs(i - self._pos))
+            painter.setPen(QPen(QColor(theme.LINE), 1.5))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(
+                int(cx - _DOT / 2), int(cy - _DOT / 2), _DOT, _DOT
+            )
+            if t > 0.01:
+                fill = QColor(theme.ACCENT)
+                fill.setAlphaF(t)
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setBrush(fill)
+                painter.drawEllipse(
+                    int(cx - _DOT / 2), int(cy - _DOT / 2), _DOT, _DOT
+                )
+        painter.end()
 
 
 class FirstRunWizard(QDialog):
@@ -70,9 +124,8 @@ class FirstRunWizard(QDialog):
         footer.setObjectName("wizfooter")
         flay = QHBoxLayout(footer)
         flay.setContentsMargins(20, 14, 20, 14)
-        self.dots = QLabel()
-        self.dots.setObjectName("muted")
-        flay.addWidget(self.dots)
+        self.dots = StepperDots(3)
+        flay.addWidget(self.dots, alignment=Qt.AlignmentFlag.AlignVCenter)
         flay.addStretch()
         self.back_btn = QPushButton(tr("wiz.back"))
         self.back_btn.clicked.connect(self._go_back)
@@ -176,16 +229,18 @@ class FirstRunWizard(QDialog):
         gpu_blocked = cuda_available() and not has_gpu   # device present, libs missing
         recommended = "large-v3-turbo" if has_gpu else "small"
         options = (
-            [("large-v3-turbo", "~0.8s"), ("medium", "~0.9s"), ("small", "~0.5s")]
+            [("large-v3-turbo", "0.8"), ("medium", "0.9"), ("small", "0.5")]
             if has_gpu
-            else [("small", "~2.5s"), ("base", "~0.9s"), ("tiny", "~0.5s")]
+            else [("small", "2.5"), ("base", "0.9"), ("tiny", "0.5")]
         )
         self.model_combo = QComboBox()
         rec_key = tr("wiz.model.rec_gpu") if has_gpu else tr("wiz.model.rec_cpu")
+        device_label = "GPU" if has_gpu else "CPU"
         for name, latency in options:
-            label = f"{name}   ·  {latency}"
+            speed = tr("wiz.model.per_phrase").format(sec=latency)
+            label = f"{name}  —  {speed}  ·  {device_label}"
             if name == recommended:
-                label += f"   —  {rec_key}"
+                label += f"  ·  {rec_key}"
             self.model_combo.addItem(label, name)
         self.model_combo.setCurrentIndex(0)
         self.model_combo.currentIndexChanged.connect(self._on_model_changed)
@@ -244,8 +299,7 @@ class FirstRunWizard(QDialog):
 
     def _sync_footer(self) -> None:
         idx = self.pages.currentIndex()
-        dots = "".join("●" if i <= idx else "○" for i in range(3))
-        self.dots.setText(dots)
+        self.dots.set_active(idx)
         self.back_btn.setVisible(idx > 0)
         self.next_btn.setText(tr("wiz.done") if idx == 2 else tr("wiz.next"))
         if idx == 1:

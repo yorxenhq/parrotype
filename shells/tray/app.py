@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import sys
 import threading
@@ -30,13 +31,20 @@ MIN_RECORDING_S = 0.3
 
 def setup_logging() -> None:
     log_path = app_data_dir() / "parrotype.log"
+    handlers: list[logging.Handler] = [
+        logging.FileHandler(log_path, encoding="utf-8")
+    ]
+    # A windowed build may have no usable stderr; the file handler must
+    # never be lost because the stream handler cannot be constructed.
+    if sys.stderr is not None:
+        try:
+            handlers.append(logging.StreamHandler())
+        except Exception:
+            pass
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        handlers=[
-            logging.FileHandler(log_path, encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
+        handlers=handlers,
     )
 
 
@@ -208,11 +216,45 @@ class TrayApp(QObject):
                     # pays the CUDA cold-start and feels sluggish.
                     self.engine.warm_up()
                 self.bridge.model_ready.emit()
+                self._maybe_selftest()
             except Exception as exc:
                 log.exception("Model preload failed")
                 self.bridge.failed.emit(tr("pill.model_failed", err=exc))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def _maybe_selftest(self) -> None:
+        """Headless release check: PARROTYPE_SELFTEST_WAV=<path> makes the app
+        transcribe that file right after model warm-up, log the result and
+        exit. Exercises the exact code path that crashed the windowed build
+        (native decode with no console attached)."""
+        wav = os.environ.get("PARROTYPE_SELFTEST_WAV")
+        if not wav:
+            return
+        try:
+            import wave
+
+            import numpy as np
+
+            with wave.open(wav, "rb") as f:
+                frames = f.readframes(f.getnframes())
+                rate = f.getframerate()
+            audio = (
+                np.frombuffer(frames, dtype=np.int16).astype(np.float32) / 32768.0
+            )
+            if rate != self.config.sample_rate:
+                idx = np.linspace(
+                    0, len(audio) - 1, int(len(audio) * self.config.sample_rate / rate)
+                ).astype(np.int64)
+                audio = audio[idx]
+            with self._engine_lock:
+                result = self.engine.transcribe(audio)
+            log.info("SELFTEST OK: %r", result.text[:120])
+            code = 0
+        except Exception:
+            log.exception("SELFTEST FAILED")
+            code = 3
+        QTimer.singleShot(0, lambda: self.app.exit(code))
 
     def _on_model_progress(self, pct: int) -> None:
         text = tr("pill.downloading_model", pct=pct)
