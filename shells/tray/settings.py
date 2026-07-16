@@ -213,6 +213,7 @@ class SettingsDialog(QDialog):
         self.insert_combo.addItem(tr("set.insert.clipboard"), "clipboard")
         _select_by_data(self.insert_combo, self.config.insert_method)
         self.insert_combo.currentIndexChanged.connect(self._save_general)
+        self.insert_combo.setToolTip(tr("set.insert_tip"))
         form.addRow(tr("set.insert_method"), self.insert_combo)
 
         self.mic_combo = QComboBox()
@@ -269,11 +270,13 @@ class SettingsDialog(QDialog):
 
         context_label = QLabel(tr("set.context_label"))
         context_label.setObjectName("muted")
+        context_label.setToolTip(tr("set.context_tip"))
         layout.addWidget(context_label)
         self.context_edit = QPlainTextEdit(self.config.recognition_context)
         self.context_edit.setPlaceholderText(tr("set.context_ph"))
         self.context_edit.setFixedHeight(70)
         self.context_edit.textChanged.connect(self._save_context)
+        self.context_edit.setToolTip(tr("set.context_tip"))
         layout.addWidget(self.context_edit)
 
         self.latency_btn = QPushButton(tr("set.latency_btn"))
@@ -293,9 +296,12 @@ class SettingsDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
 
-        hint = QLabel(tr("set.dict_hint"))
-        hint.setObjectName("muted")
-        layout.addWidget(hint)
+        self.dict_hint_label = QLabel(
+            tr("set.dict_hint") if self.config.replacements else tr("set.dict_empty")
+        )
+        self.dict_hint_label.setObjectName("muted")
+        self.dict_hint_label.setWordWrap(True)
+        layout.addWidget(self.dict_hint_label)
 
         self.dict_table = QTableWidget(0, 2)
         self.dict_table.setHorizontalHeaderLabels([tr("set.dict_heard"), tr("set.dict_written")])
@@ -455,13 +461,24 @@ class SettingsDialog(QDialog):
             if heard and written:
                 replacements[heard] = written
         self.config.replacements = replacements
+        self.dict_hint_label.setText(
+            tr("set.dict_hint") if replacements else tr("set.dict_empty")
+        )
         self.config.save()
         self.config_changed.emit()
 
     # -- history ----------------------------------------------------------------
 
     def refresh_history(self) -> None:
+        from PySide6.QtGui import QBrush, QColor
+
         self.history_list.clear()
+        if not self.history.entries:
+            placeholder = QListWidgetItem(tr("set.hist_empty"))
+            placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
+            placeholder.setForeground(QBrush(QColor(theme.MUTED)))
+            self.history_list.addItem(placeholder)
+            return
         for entry in self.history.entries:
             stamp = time.strftime("%d.%m %H:%M", time.localtime(entry.timestamp))
             secs = f" · {entry.audio_seconds:.0f}s" if entry.audio_seconds else ""

@@ -152,6 +152,12 @@ class FirstRunWizard(QDialog):
         self.mic_status.setObjectName("muted")
         layout.addWidget(self.mic_status)
         layout.addStretch()
+
+        # The one product promise, said once, where it matters most.
+        local_note = QLabel(tr("wiz.mic.local_note"))
+        local_note.setObjectName("muted")
+        local_note.setWordWrap(True)
+        layout.addWidget(local_note)
         return page
 
     def _build_model_page(self) -> QWidget:

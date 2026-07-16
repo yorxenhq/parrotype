@@ -3,8 +3,10 @@
 **You talk. The parrot types.**
 
 Local voice dictation for Windows: press a hotkey, speak, release — your
-words are typed into whatever window you're in. Runs fully on your machine
-(faster-whisper). No cloud, no account, no audio leaving your laptop.
+words are typed into whatever window you're in.
+
+**Everything runs on your machine — your voice never leaves it.**
+No cloud, no account, no telemetry; the Whisper model runs locally.
 
 Status: **1.0.0** — core + polished tray app + first-run
 wizard + CLI, reliability package, RU/EN UI, PyInstaller build + Inno
