@@ -1,0 +1,4 @@
+-r requirements.txt
+pytest>=8.0
+pip-licenses>=5.0
+pillow>=10.0
