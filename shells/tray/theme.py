@@ -165,6 +165,20 @@ def app_qss() -> str:
     }}
     QLabel#modelmeta {{ color: {MUTED}; font-size: 11px; }}
 
+    /* history cards (settings "History" page) */
+    QFrame#histcard {{
+        background: {BG_OVERLAY}; border: 1px solid {LINE}; border-radius: 10px;
+    }}
+    QFrame#histcard:hover {{ border-color: #4A4A56; }}
+    QFrame#histcard:focus {{ border-color: {MUTED}; outline: none; }}
+    QFrame#histcard[copied="true"] {{ border-color: {ACCENT}; }}
+    QLabel#histmeta {{ color: {MUTED}; font-size: 11px; }}
+    QLabel#histcopied {{ color: {ACCENT}; font-size: 11px; }}
+    QToolButton#histtrash {{ background: transparent; border: none; border-radius: 4px; padding: 2px; }}
+    QToolButton#histtrash:hover {{ background: {LINE}; }}
+    QPushButton#danger {{ color: {REC}; }}
+    QScrollArea#histscroll, QScrollArea#histscroll > QWidget > QWidget {{ background: transparent; border: none; }}
+
     /* headings: Space Grotesk (owner-approved variant C); body stays Segoe */
     QLabel#steptitle {{ font-family: {FONT_HEADING_CHAIN}; font-size: 18px; font-weight: 700; }}
     QLabel#stepno {{ font-family: {FONT_HEADING_CHAIN}; }}

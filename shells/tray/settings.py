@@ -13,33 +13,36 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QTimer, QUrl, Signal
-from PySide6.QtGui import QColor, QDesktopServices, QPainter
+from PySide6.QtCore import QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPainter, QPixmap, QTextLayout
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
-    QAbstractItemView,
     QApplication,
     QCheckBox,
     QComboBox,
     QDialog,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QHeaderView,
     QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
-    QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QScrollArea,
     QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
+    QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
 from core import APP_VERSION, Config, Engine, History, Recorder, list_input_devices
-from shells.tray import theme, updates
+from core.history import HistoryEntry
+from shells.tray import icons, theme, updates
 from shells.tray.hotkeys import validate_combo
 from shells.tray.i18n import tr
 from shells.tray.modelpicker import SIZES, ModelOption, ModelPicker, machine_options
@@ -83,6 +86,177 @@ class LevelMeter(QWidget):
         painter.end()
 
 
+# -- history cards -----------------------------------------------------------
+
+_TRASH_SVG = """<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 4.5h10M6.4 4.5V3.3c0-.5.4-.8.8-.8h1.6c.4 0 .8.3.8.8v1.2M4.6 4.5l.55 8.1c.04.6.54 1.1 1.15 1.1h3.4c.6 0 1.1-.5 1.15-1.1l.55-8.1M6.7 7v4M9.3 7v4"
+ stroke="{color}" stroke-width="1.25" fill="none" stroke-linecap="round"/></svg>"""
+
+
+def _trash_pixmap(color: str, size: int = 15) -> QPixmap:
+    pixmap = QPixmap(size, size)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    renderer = QSvgRenderer(_TRASH_SVG.format(color=color).encode("utf-8"))
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    renderer.render(painter)
+    painter.end()
+    return pixmap
+
+
+def _repolish(widget: QWidget) -> None:
+    widget.style().unpolish(widget)
+    widget.style().polish(widget)
+
+
+def _format_meta(entry: HistoryEntry) -> str:
+    """'14:03 · today · 12 s' — time, humanized day, audio length."""
+    now = time.localtime()
+    t = time.localtime(entry.timestamp)
+    hhmm = time.strftime("%H:%M", t)
+    yesterday = time.localtime(time.time() - 86400)
+    if (t.tm_year, t.tm_yday) == (now.tm_year, now.tm_yday):
+        day = tr("set.hist_today")
+    elif (t.tm_year, t.tm_yday) == (yesterday.tm_year, yesterday.tm_yday):
+        day = tr("set.hist_yesterday")
+    else:
+        day = time.strftime("%d.%m" if t.tm_year == now.tm_year else "%d.%m.%y", t)
+    meta = f"{hhmm} · {day}"
+    secs = int(entry.audio_seconds)
+    if secs >= 60:
+        meta += f" · {secs // 60}:{secs % 60:02d}"
+    elif secs >= 1:
+        meta += " · " + tr("set.hist_secs", n=secs)
+    return meta
+
+
+class _ClampLabel(QLabel):
+    """Word-wrapped label clamped to N lines with a trailing ellipsis."""
+
+    def __init__(self, text: str, lines: int = 3, parent=None) -> None:  # noqa: ANN001
+        super().__init__(parent)
+        self._full = text.replace("\n", " ").strip()
+        self._lines = lines
+        self.setWordWrap(True)
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.NoTextInteraction)
+        super().setText(self._full)
+
+    def resizeEvent(self, e) -> None:  # noqa: N802, ANN001
+        super().resizeEvent(e)
+        self._reclamp()
+
+    def _reclamp(self) -> None:
+        fm = self.fontMetrics()
+        width = max(50, self.width())
+        layout = QTextLayout(self._full, self.font())
+        layout.beginLayout()
+        text = self._full
+        for i in range(self._lines):
+            line = layout.createLine()
+            if not line.isValid():
+                break
+            line.setLineWidth(width)
+            if i == self._lines - 1 and line.textStart() + line.textLength() < len(self._full):
+                last = self._full[line.textStart():]
+                text = self._full[:line.textStart()] + fm.elidedText(
+                    last, Qt.TextElideMode.ElideRight, width
+                )
+                break
+        layout.endLayout()
+        super().setText(text)
+
+
+class HistoryCard(QFrame):
+    """One dictation: meta row + clamped text. Click = copy, hover = trash."""
+
+    copy_requested = Signal(object)     # self
+    delete_requested = Signal(object)   # self
+
+    def __init__(self, entry: HistoryEntry, index: int, scroll: QScrollArea, parent=None) -> None:  # noqa: ANN001
+        super().__init__(parent)
+        self.entry = entry
+        self.index = index              # newest-first index — History.remove() contract
+        self._scroll = scroll
+        self._copied_timer: QTimer | None = None
+        self.setObjectName("histcard")
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        v = QVBoxLayout(self)
+        v.setContentsMargins(14, 10, 10, 12)
+        v.setSpacing(6)
+        head = QHBoxLayout()
+        head.setSpacing(8)
+        self.meta = QLabel(_format_meta(entry))
+        self.meta.setObjectName("histmeta")
+        self.copied_label = QLabel(tr("set.hist_copied"))
+        self.copied_label.setObjectName("histcopied")
+        self.copied_label.hide()
+        self.trash_btn = QToolButton()
+        self.trash_btn.setObjectName("histtrash")
+        self.trash_btn.setIcon(QIcon(_trash_pixmap(theme.MUTED)))
+        self.trash_btn.setIconSize(QSize(15, 15))
+        self.trash_btn.setToolTip(tr("set.hist_delete_tip"))
+        self.trash_btn.setCursor(Qt.CursorShape.ArrowCursor)
+        self.trash_btn.hide()
+        self.trash_btn.clicked.connect(lambda: self.delete_requested.emit(self))
+        head.addWidget(self.meta)
+        head.addStretch()
+        head.addWidget(self.copied_label)
+        head.addWidget(self.trash_btn)
+        v.addLayout(head)
+        self.body = _ClampLabel(entry.text, lines=3)
+        v.addWidget(self.body)
+
+    def enterEvent(self, e) -> None:  # noqa: N802, ANN001
+        self.trash_btn.show()
+        super().enterEvent(e)
+
+    def leaveEvent(self, e) -> None:  # noqa: N802, ANN001
+        self.trash_btn.hide()
+        super().leaveEvent(e)
+
+    def mouseReleaseEvent(self, e) -> None:  # noqa: N802, ANN001
+        # Click on the card = copy; the trash button consumes its own clicks.
+        if e.button() == Qt.MouseButton.LeftButton and self.rect().contains(
+            e.position().toPoint()
+        ):
+            self.copy_requested.emit(self)
+        super().mouseReleaseEvent(e)
+
+    def keyPressEvent(self, e) -> None:  # noqa: N802, ANN001
+        if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Space):
+            self.copy_requested.emit(self)
+        elif e.key() == Qt.Key.Key_Delete:
+            self.delete_requested.emit(self)
+        elif e.key() == Qt.Key.Key_Down:
+            self.focusNextChild()
+        elif e.key() == Qt.Key.Key_Up:
+            self.focusPreviousChild()
+        else:
+            super().keyPressEvent(e)
+
+    def focusInEvent(self, e) -> None:  # noqa: N802, ANN001
+        super().focusInEvent(e)
+        self._scroll.ensureWidgetVisible(self, 0, 8)
+
+    def flash_copied(self) -> None:
+        self.copied_label.show()
+        self.setProperty("copied", True)
+        _repolish(self)
+        if self._copied_timer is not None:
+            self._copied_timer.stop()
+        self._copied_timer = QTimer(self)
+        self._copied_timer.setSingleShot(True)
+        self._copied_timer.timeout.connect(self._unflash)
+        self._copied_timer.start(1200)
+
+    def _unflash(self) -> None:
+        self.copied_label.hide()
+        self.setProperty("copied", False)
+        _repolish(self)
+
+
 class SettingsDialog(QDialog):
     config_changed = Signal()
     visibility_changed = Signal(bool)   # True while the dialog is on screen
@@ -102,11 +276,39 @@ class SettingsDialog(QDialog):
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        self.sidebar = QListWidget()
-        self.sidebar.setFixedWidth(160)
+        side = QWidget()
+        side.setObjectName("sidebarwrap")
+        side.setFixedWidth(160)
+        sv = QVBoxLayout(side)
+        sv.setContentsMargins(0, 0, 0, 0)
+        sv.setSpacing(0)
+        self.sidebar = QListWidget()          # attr name is a contract (app.py)
         self.sidebar.setObjectName("sidebar")
         for key in ("general", "model", "dictionary", "history", "about"):
             QListWidgetItem(tr(f"set.nav.{key}"), self.sidebar)
+        sv.addWidget(self.sidebar, 1)
+
+        # Ghost mark + version at the bottom — quiet chrome, not a button.
+        foot = QHBoxLayout()
+        foot.setContentsMargins(16, 10, 12, 14)
+        foot.setSpacing(8)
+        logo = QLabel()
+        # Ghost at 35% opacity, baked into the pixmap (a QGraphicsOpacityEffect
+        # is dropped by offscreen QWidget.render, which the preview scripts use).
+        mark = icons.make_pixmap(28)            # 28 < 48 -> logo-small.svg (no eye)
+        ghost = QPixmap(mark.size())
+        ghost.fill(Qt.GlobalColor.transparent)
+        ghost_painter = QPainter(ghost)
+        ghost_painter.setOpacity(0.35)
+        ghost_painter.drawPixmap(0, 0, mark)
+        ghost_painter.end()
+        logo.setPixmap(ghost)
+        ver = QLabel(APP_VERSION)
+        ver.setObjectName("sideversion")
+        foot.addWidget(logo)
+        foot.addWidget(ver)
+        foot.addStretch()
+        sv.addLayout(foot)
 
         self.pages = QStackedWidget()
         self.pages.addWidget(self._build_general_page())
@@ -118,7 +320,7 @@ class SettingsDialog(QDialog):
         self.sidebar.currentRowChanged.connect(self.pages.setCurrentIndex)
         self.sidebar.setCurrentRow(0)
 
-        root.addWidget(self.sidebar)
+        root.addWidget(side)
         root.addWidget(self.pages, 1)
 
         self._latency_done.connect(self._show_latency_result)
@@ -340,31 +542,55 @@ class SettingsDialog(QDialog):
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
 
+        top = QHBoxLayout()
         self.keep_history_check = QCheckBox(tr("set.hist_keep"))
         self.keep_history_check.setChecked(self.config.keep_history)
         self.keep_history_check.toggled.connect(self._save_general)
-        layout.addWidget(self.keep_history_check)
+        top.addWidget(self.keep_history_check)
+        top.addStretch()
 
-        self.history_list = QListWidget()
-        self.history_list.setSelectionMode(
-            QAbstractItemView.SelectionMode.SingleSelection
-        )
-        self.history_list.setWordWrap(True)
-        layout.addWidget(self.history_list, 1)
+        self.clear_btn = QPushButton(tr("set.hist_clear"))
+        self.clear_btn.clicked.connect(self._ask_clear)
+        top.addWidget(self.clear_btn)
 
-        buttons = QHBoxLayout()
-        copy_btn = QPushButton(tr("set.hist_copy"))
-        copy_btn.clicked.connect(self._copy_history_item)
-        delete_btn = QPushButton(tr("set.hist_delete"))
-        delete_btn.clicked.connect(self._delete_history_item)
-        clear_btn = QPushButton(tr("set.hist_clear"))
-        clear_btn.clicked.connect(self._clear_history)
-        buttons.addWidget(copy_btn)
-        buttons.addWidget(delete_btn)
-        buttons.addWidget(clear_btn)
-        buttons.addStretch()
-        layout.addLayout(buttons)
+        # Inline confirmation instead of a QMessageBox — quieter.
+        self.clear_confirm = QWidget()
+        confirm_row = QHBoxLayout(self.clear_confirm)
+        confirm_row.setContentsMargins(0, 0, 0, 0)
+        confirm_row.setSpacing(8)
+        confirm_label = QLabel(tr("set.hist_clear_confirm"))
+        confirm_label.setObjectName("muted")
+        yes_btn = QPushButton(tr("set.hist_clear_yes"))
+        yes_btn.setObjectName("danger")
+        yes_btn.clicked.connect(self._confirm_clear)
+        no_btn = QPushButton(tr("set.hist_clear_no"))
+        no_btn.clicked.connect(self._cancel_clear)
+        confirm_row.addWidget(confirm_label)
+        confirm_row.addWidget(yes_btn)
+        confirm_row.addWidget(no_btn)
+        self.clear_confirm.hide()
+        top.addWidget(self.clear_confirm)
+        layout.addLayout(top)
 
+        self.hist_empty_label = QLabel(tr("set.hist_empty"))
+        self.hist_empty_label.setObjectName("muted")
+        self.hist_empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.hist_empty_label.setWordWrap(True)
+        layout.addWidget(self.hist_empty_label, 1)
+
+        self.hist_scroll = QScrollArea()
+        self.hist_scroll.setWidgetResizable(True)
+        self.hist_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.hist_scroll.setObjectName("histscroll")
+        self._hist_container = QWidget()
+        self._hist_vbox = QVBoxLayout(self._hist_container)
+        self._hist_vbox.setContentsMargins(0, 0, 0, 0)
+        self._hist_vbox.setSpacing(8)
+        self._hist_vbox.addStretch(1)
+        self.hist_scroll.setWidget(self._hist_container)
+        layout.addWidget(self.hist_scroll, 1)
+
+        self._clear_timer: QTimer | None = None
         self.refresh_history()
         return page
 
@@ -522,42 +748,51 @@ class SettingsDialog(QDialog):
     # -- history ----------------------------------------------------------------
 
     def refresh_history(self) -> None:
-        from PySide6.QtGui import QBrush, QColor
+        # Full rebuild on every change: capped at 50 cards, cheap, and the
+        # newest-first indices can never go stale.
+        while self._hist_vbox.count() > 1:              # keep the trailing stretch
+            item = self._hist_vbox.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        entries = self.history.entries                   # newest first
+        self.hist_empty_label.setVisible(not entries)
+        self.hist_scroll.setVisible(bool(entries))
+        self.clear_btn.setEnabled(bool(entries))
+        for i, entry in enumerate(entries):
+            card = HistoryCard(entry, i, self.hist_scroll)
+            card.copy_requested.connect(self._copy_card)
+            card.delete_requested.connect(self._delete_card)
+            self._hist_vbox.insertWidget(self._hist_vbox.count() - 1, card)
 
-        self.history_list.clear()
-        if not self.history.entries:
-            placeholder = QListWidgetItem(tr("set.hist_empty"))
-            placeholder.setFlags(Qt.ItemFlag.NoItemFlags)
-            placeholder.setForeground(QBrush(QColor(theme.MUTED)))
-            self.history_list.addItem(placeholder)
-            return
-        for entry in self.history.entries:
-            stamp = time.strftime("%d.%m %H:%M", time.localtime(entry.timestamp))
-            secs = f" · {entry.audio_seconds:.0f}s" if entry.audio_seconds else ""
-            item = QListWidgetItem(f"[{stamp}{secs}] {entry.text}")
-            item.setData(Qt.ItemDataRole.UserRole, entry.text)
-            self.history_list.addItem(item)
+    def _copy_card(self, card: HistoryCard) -> None:
+        QApplication.clipboard().setText(card.entry.text)
+        card.flash_copied()
 
-    def _copy_history_item(self) -> None:
-        item = self.history_list.currentItem()
-        if item:
-            QApplication.clipboard().setText(item.data(Qt.ItemDataRole.UserRole))
+    def _delete_card(self, card: HistoryCard) -> None:
+        self.history.remove(card.index)   # newest-first index — History.remove contract
+        self.refresh_history()
 
-    def _delete_history_item(self) -> None:
-        row = self.history_list.currentRow()
-        if row >= 0:
-            self.history.remove(row)
-            self.refresh_history()
+    def _ask_clear(self) -> None:
+        self.clear_btn.hide()
+        self.clear_confirm.show()
+        if self._clear_timer is not None:
+            self._clear_timer.stop()
+        self._clear_timer = QTimer(self)
+        self._clear_timer.setSingleShot(True)
+        self._clear_timer.timeout.connect(self._cancel_clear)
+        self._clear_timer.start(5000)     # auto-dismiss: no dangling confirm
 
-    def _clear_history(self) -> None:
-        if (
-            QMessageBox.question(
-                self, tr("set.hist_clear_q_title"), tr("set.hist_clear_q")
-            )
-            == QMessageBox.StandardButton.Yes
-        ):
-            self.history.clear()
-            self.refresh_history()
+    def _confirm_clear(self) -> None:
+        self.history.clear()
+        self.refresh_history()
+        self._cancel_clear()
+
+    def _cancel_clear(self) -> None:
+        if self._clear_timer is not None:
+            self._clear_timer.stop()
+            self._clear_timer = None
+        self.clear_confirm.hide()
+        self.clear_btn.show()
 
     # -- latency test --------------------------------------------------------------
 
@@ -612,15 +847,14 @@ class SettingsDialog(QDialog):
         self.setStyleSheet(
             f"""
             QDialog {{ background: {theme.SURFACE}; }}
-            QListWidget#sidebar {{
-                background: #191920; border: none; border-radius: 0;
-                border-right: 1px solid {theme.LINE}; padding-top: 12px;
-            }}
+            QWidget#sidebarwrap {{ background: #191920; border-right: 1px solid {theme.LINE}; }}
+            QListWidget#sidebar {{ background: transparent; border: none; border-radius: 0; padding-top: 12px; }}
             QListWidget#sidebar::item {{ padding: 10px 16px; border: none; border-radius: 0; }}
             QListWidget#sidebar::item:selected {{
                 background: {theme.LINE}; color: {theme.ACCENT};
                 border-left: 2px solid {theme.ACCENT};
             }}
+            QLabel#sideversion {{ color: {theme.MUTED}; font-size: 11px; }}
             """
         )
 
