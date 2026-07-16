@@ -33,10 +33,10 @@ class Config:
     """All user-facing settings. Persisted as JSON."""
 
     # Model
-    model_size: str = "small"          # tiny | base | small | medium | large-v3
+    model_size: str = "small"          # tiny | base | small | medium | large-v3-turbo | large-v3
     device: str = "auto"               # auto | cuda | cpu
     compute_type: str = "auto"         # auto | float16 | int8_float16 | int8
-    language: str = "auto"             # auto | ru | en
+    language: str = "auto"             # auto | whisper language code ("ru", "en", …)
 
     # Audio
     input_device: int | None = None    # None = system default

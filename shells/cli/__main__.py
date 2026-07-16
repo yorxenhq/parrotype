@@ -22,8 +22,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--seconds", type=float, default=10.0, help="mic recording length (default 10)"
     )
-    parser.add_argument("--model", help="model size (tiny/base/small/medium/large-v3)")
-    parser.add_argument("--language", help="ru / en / auto")
+    parser.add_argument(
+        "--model", help="model size (tiny/base/small/medium/large-v3-turbo/large-v3)"
+    )
+    parser.add_argument("--language", help="auto or a whisper language code (ru, en, …)")
     parser.add_argument("--device", help="cuda / cpu / auto")
     parser.add_argument(
         "--raw", action="store_true", help="skip the replacement dictionary"

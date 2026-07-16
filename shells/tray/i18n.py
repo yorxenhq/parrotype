@@ -88,7 +88,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "set.device.cpu": {"ru": "CPU", "en": "CPU"},
     "set.context_label": {
         "ru": "Контекст распознавания (термины, имена — подсказка модели):",
-        "en": "Recognition context (terms and names that hint the model):",
+        "en": "Recognition context (terms and names the model should expect):",
     },
     "set.context_ph": {
         "ru": "Например: Claude Code, Cloudflare, Kubernetes…",
@@ -110,7 +110,7 @@ _STRINGS: dict[str, dict[str, str]] = {
     "set.latency_fast": {"ru": " — на этой машине работает быстро.", "en": " — fast on this machine."},
     "set.latency_ok": {"ru": " — приемлемо.", "en": " — acceptable."},
     "set.latency_slow": {
-        "ru": " — медленно, попробуйте модель меньше.",
+        "ru": " — медленно, попробуй модель поменьше.",
         "en": " — slow; try a smaller model.",
     },
     "set.latency_error": {"ru": "Ошибка теста: {err}", "en": "Test failed: {err}"},
@@ -147,17 +147,26 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ru": "Скажи что-нибудь — полоски должны двигаться.",
         "en": "Say something — the bars should move.",
     },
-    "wiz.mic.ok": {"ru": "✓ слышу вас — уровень хороший", "en": "✓ hearing you — good level"},
+    "wiz.mic.ok": {"ru": "✓ слышу тебя — уровень хороший", "en": "✓ hearing you — good level"},
     "wiz.mic.silent": {"ru": "пока тишина…", "en": "silence so far…"},
+    "wiz.mic.none": {
+        "ru": "Микрофон не найден — подключи его и вернись к этому шагу.",
+        "en": "No microphone found — plug one in and come back to this step.",
+    },
     "wiz.model.title": {"ru": "Модель", "en": "Model"},
     "wiz.model.desc": {
-        "ru": "Рекомендация по вашему железу. Модель скачается один раз.",
-        "en": "Recommended for your hardware. The model downloads once.",
+        "ru": "Рекомендация под это железо. Модель скачается один раз.",
+        "en": "Recommended for this hardware. The model downloads once.",
     },
     "wiz.model.rec_gpu": {"ru": "РЕКОМЕНДУЕМ · GPU", "en": "RECOMMENDED · GPU"},
     "wiz.model.rec_cpu": {"ru": "РЕКОМЕНДУЕМ · CPU", "en": "RECOMMENDED · CPU"},
     "wiz.model.downloading": {"ru": "Скачиваю модель — {pct}%", "en": "Downloading model — {pct}%"},
     "wiz.model.cached": {"ru": "Модель уже скачана.", "en": "Model already downloaded."},
+    "wiz.model.failed": {
+        "ru": "Не получилось скачать — проверь интернет и попробуй ещё раз.",
+        "en": "Download failed — check your internet connection and try again.",
+    },
+    "wiz.model.retry": {"ru": "Повторить", "en": "Retry"},
     "wiz.hotkey.title": {"ru": "Хоткей и проба", "en": "Hotkey & try it"},
     "wiz.hotkey.desc": {
         "ru": "Зажми и держи, чтобы говорить:",

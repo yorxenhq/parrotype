@@ -145,7 +145,9 @@ class FirstRunWizard(QDialog):
         layout.addWidget(self.wiz_meter)
         layout.addSpacing(8)
 
-        self.mic_status = QLabel(tr("wiz.mic.silent"))
+        self.mic_status = QLabel(
+            tr("wiz.mic.silent") if self.mic_combo.count() else tr("wiz.mic.none")
+        )
         self.mic_status.setObjectName("muted")
         layout.addWidget(self.mic_status)
         layout.addStretch()
@@ -185,6 +187,10 @@ class FirstRunWizard(QDialog):
         self.dl_bar.setFixedHeight(6)
         self.dl_bar.hide()
         layout.addWidget(self.dl_bar)
+        self.dl_retry_btn = QPushButton(tr("wiz.model.retry"))
+        self.dl_retry_btn.clicked.connect(self._ensure_model)
+        self.dl_retry_btn.hide()
+        layout.addWidget(self.dl_retry_btn, alignment=Qt.AlignmentFlag.AlignLeft)
         layout.addStretch()
         return page
 
@@ -289,6 +295,7 @@ class FirstRunWizard(QDialog):
         self._heard_something = False
         self.mic_status.setText(tr("wiz.mic.silent"))
         self.mic_status.setObjectName("muted")
+        self.mic_status.setStyleSheet("")
         self._stop_monitor()
         self._start_monitor()
 
@@ -315,11 +322,13 @@ class FirstRunWizard(QDialog):
         if engine.is_model_cached():
             self._download_ok = True
             self.dl_bar.hide()
+            self.dl_retry_btn.hide()
             self.dl_label.setText(tr("wiz.model.cached"))
             self._sync_footer()
             return
         self._download_ok = False
         self._downloading = True
+        self.dl_retry_btn.hide()
         self.dl_bar.setValue(0)
         self.dl_bar.show()
         self.dl_label.setText(tr("wiz.model.downloading", pct=0))
@@ -345,6 +354,10 @@ class FirstRunWizard(QDialog):
         if ok:
             self.dl_bar.setValue(100)
             self.dl_label.setText(tr("wiz.model.cached"))
+        else:
+            self.dl_bar.hide()
+            self.dl_label.setText(tr("wiz.model.failed"))
+            self.dl_retry_btn.show()
         self._sync_footer()
 
     # -- step 3: hotkey ------------------------------------------------------------

@@ -37,14 +37,14 @@ UI languages: Russian + English (follows the system, switchable).
   - paste into the active window: clipboard + Ctrl+V, previous clipboard
     text restored
   - tray menu: status/model, copy last dictation, pause, settings, history
-  - settings window (sidebar): hotkeys / language (auto·ru·en) / microphone /
+  - settings window (sidebar): hotkeys / language (auto + 14 languages) / microphone /
     autostart / sound ticks · model + device + **latency test** · replacement
     dictionary ("клод" -> "Claude") · local history (last 50, can be
     disabled) · about
 - **`shells/cli/`** — `python -m shells.cli audio.wav` or `--mic --seconds 10`
   -> text to stdout.
-- Languages: RU / EN / auto-detect. All processing local; history and config
-  live in `%APPDATA%\Parrotype`.
+- Languages: auto-detect + the 14 gate-passed languages listed above. All
+  processing local; history and config live in `%APPDATA%\Parrotype`.
 
 Not in v1 (by spec): installer + first-run wizard (v1.5), HTTP microservice
 shell (reserved), TTS direction (interface reserved), cloud anything (never).
@@ -100,11 +100,12 @@ Settings -> Модель -> Тест латентности.
 
 Machine-verified (`pytest tests`, `scripts/selftest_*.py`):
 
-- 19 unit/integration tests: config, history, post-filter dictionary, and
-  end-to-end STT on synthesized English speech (keywords + dictionary
-  replacement verified on real model output)
+- 42 unit/integration tests: config, history, post-filter dictionary,
+  reliability guards, recognition quality, and end-to-end STT on synthesized
+  English speech (keywords + dictionary replacement verified on real model
+  output)
 - tray app boots headless: tray icon, menu, all overlay states, focus and
-  click-through flags (13 checks)
+  click-through flags (18 checks)
 - global hotkey plumbing with injected input through the real OS hook:
   PTT press/release, toggle, Esc-cancel, pause gate (8 checks)
 - paste path against a live Notepad: text lands in the window, clipboard
