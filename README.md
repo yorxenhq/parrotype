@@ -1,10 +1,6 @@
 <p align="center">
-  <img src="assets/logo.svg" width="88" alt="Parrotype">
+  <img src="assets/promo/readme-hero-en.png" alt="Parrotype — you talk, the parrot types. Local Whisper dictation for Windows, 100% offline.">
 </p>
-
-<h1 align="center">Parrotype</h1>
-
-<p align="center"><em>You talk. The parrot types.</em></p>
 
 <p align="center">Voice dictation for Windows that runs entirely on your machine. Free, no account, no cloud.</p>
 

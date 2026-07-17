@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="design_doc_mode" content="canvas">
+<title>Parrotype — концепт-направления фонов</title>
+<link rel="stylesheet" href="space-grotesk.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;color:#ECECF1}
+a{color:#4FD1B0}a:hover{color:#7FE3C9}
+.frame{position:absolute;width:1280px;height:640px;background:#101014;border:1px solid #2E2E36;padding:72px 80px;overflow:hidden}
+.badge{position:absolute;top:20px;left:20px;font:600 13px "Cascadia Mono",monospace;color:#9A9AA6;background:#1E1E24;border:1px solid #2E2E36;border-radius:6px;padding:4px 10px;z-index:5}
+.note{position:absolute;top:23px;left:76px;font-size:13px;color:#9A9AA6;white-space:nowrap;z-index:5}
+.top{display:flex;align-items:center;gap:2px;position:relative;z-index:2}
+.wm{font-family:'Space Grotesk';font-weight:700;font-size:54px;letter-spacing:-0.01em;line-height:1;margin-left:-4px}
+.mint{color:#4FD1B0}.mut{color:#9A9AA6}
+.tagline{font-family:"Cascadia Mono","Consolas",monospace;font-size:23px;margin-top:46px;line-height:1.75;position:relative;z-index:2;white-space:nowrap}
+.cur{display:inline-block;width:11px;height:24px;background:#4FD1B0;vertical-align:-4px;margin-left:6px}
+.chips{display:flex;gap:10px;margin-top:30px;position:relative;z-index:2}
+.chip{font-family:"Cascadia Mono","Consolas",monospace;font-size:13px;border:1px solid #2E2E36;border-radius:999px;padding:8px 16px;background:#17171C;white-space:nowrap}
+.chip b{color:#4FD1B0;font-weight:600}
+.repo{position:absolute;left:80px;bottom:64px;font-family:"Cascadia Mono","Consolas",monospace;font-size:16px;color:#9A9AA6;z-index:2}
+.repo b{color:#4FD1B0;font-weight:400}
+</style>
+</head>
+<body>
+<section style="position:absolute;left:0;top:60px">
+
+<div class="frame" id="2a" style="left:0;top:0">
+  <span class="badge">2a</span><span class="note">«голос виден»: гигантская волна из пилюли как тихий фон-текстура</span>
+  <svg style="position:absolute;left:0;bottom:0;width:1280px;height:280px;z-index:1" viewBox="0 0 1280 280" preserveAspectRatio="none">
+    <g fill="#4FD1B0" opacity="0.07">
+      <rect x="20" y="120" width="14" height="160" rx="7"></rect><rect x="60" y="60" width="14" height="220" rx="7"></rect><rect x="100" y="150" width="14" height="130" rx="7"></rect><rect x="140" y="90" width="14" height="190" rx="7"></rect><rect x="180" y="180" width="14" height="100" rx="7"></rect><rect x="220" y="40" width="14" height="240" rx="7"></rect><rect x="260" y="130" width="14" height="150" rx="7"></rect><rect x="300" y="80" width="14" height="200" rx="7"></rect><rect x="340" y="170" width="14" height="110" rx="7"></rect><rect x="380" y="110" width="14" height="170" rx="7"></rect><rect x="420" y="200" width="14" height="80" rx="7"></rect><rect x="460" y="70" width="14" height="210" rx="7"></rect><rect x="500" y="140" width="14" height="140" rx="7"></rect><rect x="540" y="100" width="14" height="180" rx="7"></rect><rect x="580" y="190" width="14" height="90" rx="7"></rect><rect x="620" y="50" width="14" height="230" rx="7"></rect><rect x="660" y="160" width="14" height="120" rx="7"></rect><rect x="700" y="120" width="14" height="160" rx="7"></rect><rect x="740" y="210" width="14" height="70" rx="7"></rect><rect x="780" y="90" width="14" height="190" rx="7"></rect><rect x="820" y="150" width="14" height="130" rx="7"></rect><rect x="860" y="60" width="14" height="220" rx="7"></rect><rect x="900" y="180" width="14" height="100" rx="7"></rect><rect x="940" y="110" width="14" height="170" rx="7"></rect><rect x="980" y="200" width="14" height="80" rx="7"></rect><rect x="1020" y="80" width="14" height="200" rx="7"></rect><rect x="1060" y="140" width="14" height="140" rx="7"></rect><rect x="1100" y="170" width="14" height="110" rx="7"></rect><rect x="1140" y="100" width="14" height="180" rx="7"></rect><rect x="1180" y="190" width="14" height="90" rx="7"></rect><rect x="1220" y="130" width="14" height="150" rx="7"></rect>
+    </g>
+  </svg>
+  <div class="top">
+    <svg width="76" height="76" viewBox="0 0 96 96"><rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"></rect><rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"></rect><path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"></path><circle cx="64" cy="23.5" r="3.6" fill="#101014"></circle></svg>
+    <div class="wm">Parro<span class="mint">type</span></div>
+  </div>
+  <div class="tagline"><span class="mint">$</span> hold Ctrl+Alt, speak<br><span class="mut">&gt; text lands where your cursor is. offline. ~0.8s.</span><span class="cur"></span></div>
+  <div class="chips"><span class="chip"><b>100%</b> offline</span><span class="chip">free forever</span><span class="chip">MIT</span><span class="chip">win 10/11</span></div>
+  <div class="repo"><b>github.com/</b>yorxenhq/parrotype</div>
+</div>
+
+<div class="frame" id="2b" style="left:1360px;top:0">
+  <span class="badge">2b</span><span class="note">«эхо попугая»: сказанное повторяется напечатанным — призрачная строка-эхо за текстом</span>
+  <div style="position:absolute;left:80px;top:310px;z-index:1;font-family:'Cascadia Mono','Consolas',monospace;font-size:23px;line-height:2.2;color:#ECECF1;opacity:.13;white-space:nowrap">you talk — the parrot types<br>you talk — the parrot types<br>you talk — the parrot types<br>you talk — the parrot types</div>
+  <div style="position:absolute;right:-60px;top:-70px;z-index:1;opacity:.05"><svg width="520" height="520" viewBox="0 0 96 96"><rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"></rect><rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"></rect><path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"></path><circle cx="64" cy="23.5" r="3.6" fill="#101014"></circle></svg></div>
+  <div class="top">
+    <svg width="76" height="76" viewBox="0 0 96 96"><rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"></rect><rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"></rect><path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"></path><circle cx="64" cy="23.5" r="3.6" fill="#101014"></circle></svg>
+    <div class="wm">Parro<span class="mint">type</span></div>
+  </div>
+  <div class="tagline"><span class="mint">$</span> you talk<br><span class="mint">&gt; the parrot types</span><span class="cur"></span></div>
+  <div class="chips"><span class="chip"><b>100%</b> offline</span><span class="chip">free forever</span><span class="chip">MIT</span><span class="chip">win 10/11</span></div>
+  <div class="repo"><b>github.com/</b>yorxenhq/parrotype</div>
+</div>
+
+<div class="frame" id="2c" style="left:2720px;top:0">
+  <span class="badge">2c</span><span class="note">«оперение»: бары логотипа как ритм-паттерн по краю — перья/эквалайзер</span>
+  <svg style="position:absolute;right:0;top:0;width:420px;height:640px;z-index:1" viewBox="0 0 420 640" preserveAspectRatio="none">
+    <g fill="none" stroke="#4FD1B0" stroke-width="14" stroke-linecap="round">
+      <line x1="330" y1="40" x2="330" y2="600" opacity="0.05"></line>
+      <line x1="366" y1="90" x2="366" y2="550" opacity="0.08"></line>
+      <line x1="402" y1="150" x2="402" y2="490" opacity="0.12"></line>
+    </g>
+    <g fill="none" stroke="#4FD1B0" stroke-width="14" stroke-linecap="round" opacity="0.04">
+      <line x1="258" y1="120" x2="258" y2="520"></line><line x1="294" y1="70" x2="294" y2="570"></line>
+    </g>
+  </svg>
+  <div class="top">
+    <svg width="76" height="76" viewBox="0 0 96 96"><rect x="20" y="42" width="10" height="32" rx="5" fill="#4FD1B0"></rect><rect x="34" y="28" width="10" height="46" rx="5" fill="#4FD1B0"></rect><path d="M48 74 L48 25 C48 16 54.8 10 63 10 C71.5 10 78 16.5 78 25 C78 33.5 71.5 40 63 40 L58 40 L58 74 C58 76.8 55.8 79 53 79 C50.2 79 48 76.8 48 74 Z" fill="#4FD1B0"></path><circle cx="64" cy="23.5" r="3.6" fill="#101014"></circle></svg>
+    <div class="wm">Parro<span class="mint">type</span></div>
+  </div>
+  <div class="tagline"><span class="mint">$</span> hold Ctrl+Alt, speak<br><span class="mut">&gt; text lands where your cursor is. offline. ~0.8s.</span><span class="cur"></span></div>
+  <div class="chips"><span class="chip"><b>100%</b> offline</span><span class="chip">free forever</span><span class="chip">MIT</span><span class="chip">win 10/11</span></div>
+  <div class="repo"><b>github.com/</b>yorxenhq/parrotype</div>
+</div>
+
+</section>
+</body>
+</html>
