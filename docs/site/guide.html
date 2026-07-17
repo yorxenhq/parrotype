@@ -110,8 +110,8 @@ footer{max-width:52rem;margin:4.5rem auto 0;padding:1.4rem 1.25rem 2.2rem;color:
 <h3>How text gets inserted</h3>
 <p>Two methods in <strong>Settings → General → Insert method</strong>:</p>
 <ul>
-  <li><strong>Types like a keyboard</strong> (default) — your clipboard is never touched.</li>
-  <li><strong>Pastes via clipboard</strong> — pastes the text, then puts whatever you had copied back.</li>
+  <li><strong>Types like a keyboard</strong> (default) — short and medium texts are typed directly, clipboard untouched. Very long texts (1000+ characters) automatically fall back to a careful clipboard paste.</li>
+  <li><strong>Pastes via clipboard</strong> — always pastes; plain-text clipboard contents are put back afterwards (images or rich content can't be restored — a v1 limitation).</li>
 </ul>
 <p>If some app garbles the typed text, switch to clipboard — that's what it's for.</p>
 
@@ -145,10 +145,10 @@ footer{max-width:52rem;margin:4.5rem auto 0;padding:1.4rem 1.25rem 2.2rem;color:
 <p>Windows warns because the installer isn't code-signed — a signing certificate costs real money every year, and Parrotype is free. The warning means "unknown publisher", not "malware". Click <strong>More info → Run anyway</strong>. Prefer to trust code, not words? The source is public — <a href="https://github.com/yorxenhq/parrotype#readme" rel="noopener">build it yourself</a> in four commands.</p>
 
 <h3 id="slow">Recognition is slow on my machine</h3>
-<p>Use <strong>Settings → Model → Check speed</strong> — it gives you a real number for your hardware. If it says slow, pick a smaller model: quality drops a little, speed jumps a lot. On CPU, <code>small</code> is the sane default; <code>base</code> and <code>tiny</code> are lighter still. Got an NVIDIA card? The GPU build (from source, CUDA 12) does a 13-second phrase in about 0.8 s.</p>
+<p>Use <strong>Settings → Model → Check speed</strong> — it gives you a real number for your hardware. If it says slow, pick a smaller model: quality drops a little, speed jumps a lot. On CPU, <code>small</code> is the sane default; <code>base</code> and <code>tiny</code> are lighter still. Got an NVIDIA card? <strong>Settings → Model → Enable GPU</strong> downloads the CUDA runtime once (~1.4 GB) — after that the best model does a 13-second phrase in about 0.8 s.</p>
 
 <h3 id="garbled">Text comes out broken in one specific app</h3>
-<p>Switch <strong>Settings → General → Insert method</strong> to <em>Pastes via clipboard</em>. Some apps mishandle simulated typing; the clipboard route is bulletproof, and your previous clipboard is restored afterwards.</p>
+<p>Switch <strong>Settings → General → Insert method</strong> to <em>Pastes via clipboard</em>. Some apps mishandle simulated typing; the clipboard route is bulletproof, and plain-text clipboard contents are restored afterwards.</p>
 <p>If the pill ever says <em>"couldn't insert — text is on the clipboard"</em> — the text is already copied, just press <kbd>Ctrl</kbd>+<kbd>V</kbd>.</p>
 
 <p class="muted">Didn't find your case? <a href="https://github.com/yorxenhq/parrotype/issues" rel="noopener">Open an issue</a> — describe what you did and what you saw.</p>
