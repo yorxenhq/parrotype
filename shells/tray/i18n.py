@@ -265,6 +265,13 @@ _STRINGS: dict[str, dict[str, str]] = {
         "ru": "Распознавать будет процессор — видеокарта NVIDIA не найдена.",
         "en": "Recognition runs on the processor — no NVIDIA graphics card found.",
     },
+    "model.device_note.cpu_en": {
+        "ru": "Распознавать будет процессор. Это английские версии моделей — "
+              "на том же размере слышат английский точнее.",
+        "en": "Recognition runs on the processor. These are the English-only "
+              "builds — same size, noticeably better English.",
+    },
+    "model.lang_label": {"ru": "Языки диктовки", "en": "Dictation languages"},
     "model.device_note.gpu": {
         "ru": "Распознавать будет видеокарта NVIDIA — самый быстрый вариант.",
         "en": "Recognition runs on your NVIDIA graphics card — the fastest option.",
@@ -341,6 +348,16 @@ _STRINGS: dict[str, dict[str, str]] = {
     "wiz.done": {"ru": "Готово", "en": "Done"},
     "wiz.back": {"ru": "Назад", "en": "Back"},
 }
+
+# Recognition languages offered in settings and the wizard: auto-detect +
+# the set that passed the measured quality gate (scripts/lang_gate.py).
+LANGUAGES: list[tuple[str, str]] = [
+    ("Auto", "auto"), ("Русский", "ru"), ("English", "en"),
+    ("Español", "es"), ("Deutsch", "de"), ("Français", "fr"),
+    ("Italiano", "it"), ("Português", "pt"), ("Polski", "pl"),
+    ("Українська", "uk"), ("Nederlands", "nl"), ("Türkçe", "tr"),
+    ("日本語", "ja"), ("한국어", "ko"), ("中文", "zh"),
+]
 
 _language = "ru"
 

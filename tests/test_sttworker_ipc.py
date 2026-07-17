@@ -83,3 +83,17 @@ def test_bench_overrides_model_options():
 
     untouched = _apply_bench(small, None)
     assert untouched == small
+
+
+def test_en_language_swaps_cpu_model_set(monkeypatch):
+    import shells.tray.modelpicker as mp
+
+    monkeypatch.setattr(mp, "cuda_usable", lambda: False)
+    multi, _ = mp.machine_options(language="auto")
+    en, note_en = mp.machine_options(language="en")
+    assert [o.name for o in multi] == ["small", "base", "tiny"]
+    assert [o.name for o in en] == ["small.en", "base.en", "tiny.en"]
+    # GPU set stays multilingual regardless of language
+    monkeypatch.setattr(mp, "cuda_usable", lambda: True)
+    gpu, _ = mp.machine_options(language="en")
+    assert [o.name for o in gpu] == ["large-v3-turbo", "medium", "small"]

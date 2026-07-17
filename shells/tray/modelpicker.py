@@ -39,6 +39,14 @@ CPU_OPTIONS = [
     ModelOption("base",  "model.desc.cpu.base",  "0.9", "140", "mb"),
     ModelOption("tiny",  "model.desc.cpu.tiny",  "0.5", "75",  "mb"),
 ]
+# English-only whisper variants: same size and speed, trained purely on
+# English — at tiny/base scale they hear English notably better than the
+# multilingual builds. Offered when the user says they dictate English only.
+EN_CPU_OPTIONS = [
+    ModelOption("small.en", "model.desc.cpu.small", "2.5", "460", "mb", recommended=True),
+    ModelOption("base.en",  "model.desc.cpu.base",  "0.9", "140", "mb"),
+    ModelOption("tiny.en",  "model.desc.cpu.tiny",  "0.5", "75",  "mb"),
+]
 
 # Download sizes for every valid model (source: HF cache weights, matches
 # the README "~75 MB tiny … ~3 GB large-v3" line).
@@ -49,17 +57,29 @@ SIZES: dict[str, tuple[str, str]] = {
     "medium": ("1.5", "gb"),
     "large-v3-turbo": ("1.6", "gb"),
     "large-v3": ("2.9", "gb"),
+    "tiny.en": ("75", "mb"),
+    "base.en": ("140", "mb"),
+    "small.en": ("460", "mb"),
+    "medium.en": ("1.5", "gb"),
 }
 
 
-def machine_options(bench: dict | None = None) -> tuple[list[ModelOption], str]:
+def machine_options(
+    bench: dict | None = None, language: str = "auto"
+) -> tuple[list[ModelOption], str]:
     """The recommended option set + the one device note for this machine.
 
     bench — config.bench_results: hardcoded reference speeds are replaced
     by real measurements from THIS machine wherever the latency test ran.
+    language — the recognition-language setting: "en" swaps the CPU set
+    to the English-only .en builds (better English at the same size);
+    the GPU set stays multilingual (large-v3-turbo is top-tier for
+    English already, and at 0.8s there is nothing to trade).
     """
     if cuda_usable():
         options, note, device = GPU_OPTIONS, tr("model.device_note.gpu"), "cuda"
+    elif language == "en":
+        options, note, device = EN_CPU_OPTIONS, tr("model.device_note.cpu_en"), "cpu"
     else:
         options, note, device = CPU_OPTIONS, tr("model.device_note.cpu"), "cpu"
     if bench:

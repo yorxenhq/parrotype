@@ -31,7 +31,7 @@ from core.sysprobe import summary_line
 from shells.tray import theme
 from shells.tray.gpupanel import GpuOfferPanel
 from shells.tray.hotkeys import validate_combo
-from shells.tray.i18n import tr
+from shells.tray.i18n import LANGUAGES, tr
 from shells.tray.modelpicker import ModelPicker, machine_options
 from shells.tray.native import enable_dark_titlebar
 from shells.tray.settings import LevelMeter, _select_by_data
@@ -239,22 +239,36 @@ class FirstRunWizard(QDialog):
 
         has_gpu = cuda_usable()
         gpu_blocked = cuda_available() and not has_gpu   # device present, libs missing
-        options, note = machine_options(self.config.bench_results)
         if gpu_blocked:
             # GPU detected but CUDA runtime libs are absent (packaged
             # CPU-only build): offer the one-click enable right here.
-            note = tr("wiz.model.gpu_missing_libs")
             self.gpu_panel: GpuOfferPanel | None = GpuOfferPanel()
             self.gpu_panel.installed.connect(self._on_gpu_installed)
             layout.addWidget(self.gpu_panel)
             layout.addSpacing(8)
         else:
             self.gpu_panel = None
-        default = "large-v3-turbo" if has_gpu else "small"
+
+        # Dictation languages: "English only" swaps the CPU set to the
+        # .en builds (same size, better English).
+        lang_row = QHBoxLayout()
+        lang_label = QLabel(tr("model.lang_label"))
+        lang_label.setObjectName("muted")
+        lang_row.addWidget(lang_label)
+        self.lang_combo = QComboBox()
+        for label, code in LANGUAGES:
+            self.lang_combo.addItem(label, code)
+        _select_by_data(self.lang_combo, self.config.language)
+        self.lang_combo.currentIndexChanged.connect(self._on_lang_changed)
+        lang_row.addWidget(self.lang_combo, 1)
+        layout.addLayout(lang_row)
+        layout.addSpacing(8)
+
+        options, note = self._current_options()
         selected = (
             self.config.model_size
             if self.config.model_size in {o.name for o in options}
-            else default
+            else self._default_model()
         )
         self.model_picker = ModelPicker(options, selected, note)
         self.model_picker.changed.connect(self._on_model_changed)
@@ -394,18 +408,45 @@ class FirstRunWizard(QDialog):
 
     # -- step 2: model -----------------------------------------------------------
 
-    def _on_gpu_installed(self) -> None:
-        """CUDA runtime just landed: re-rank the models for the GPU."""
-        options, note = machine_options(self.config.bench_results)
+    def _current_options(self):  # noqa: ANN202
+        options, note = machine_options(
+            self.config.bench_results, language=self.config.language
+        )
+        if cuda_available() and not cuda_usable():
+            note = tr("wiz.model.gpu_missing_libs")
+        return options, note
+
+    def _default_model(self) -> str:
+        if cuda_usable():
+            return "large-v3-turbo"
+        return "small.en" if self.config.language == "en" else "small"
+
+    def _swap_picker(self, selected: str) -> None:
+        options, note = self._current_options()
+        if selected not in {o.name for o in options}:
+            selected = self._default_model()
         old = self.model_picker
-        new = ModelPicker(options, "large-v3-turbo", note)
+        new = ModelPicker(options, selected, note)
         new.changed.connect(self._on_model_changed)
         index = self._model_layout.indexOf(old)
         self._model_layout.insertWidget(index, new)
         self._model_layout.removeWidget(old)
         old.deleteLater()
         self.model_picker = new
-        self._on_model_changed()   # persist the new default + start its download
+        if self.config.model_size != selected:
+            self._on_model_changed()   # persist + start the download
+
+    def _on_lang_changed(self) -> None:
+        self.config.language = self.lang_combo.currentData()
+        self.config.save()
+        # Keep the twin selection across set swaps (small <-> small.en).
+        base = self.config.model_size.removesuffix(".en")
+        preferred = f"{base}.en" if self.config.language == "en" else base
+        self._swap_picker(preferred)
+
+    def _on_gpu_installed(self) -> None:
+        """CUDA runtime just landed: re-rank the models for the GPU."""
+        self._swap_picker("large-v3-turbo")
 
     def _on_model_changed(self) -> None:
         self.config.model_size = self.model_picker.current

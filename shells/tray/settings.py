@@ -49,7 +49,7 @@ from core.sysprobe import summary_line
 from shells.tray import icons, theme, updates
 from shells.tray.gpupanel import GpuOfferPanel
 from shells.tray.hotkeys import validate_combo
-from shells.tray.i18n import tr
+from shells.tray.i18n import LANGUAGES, tr
 from shells.tray.modelpicker import SIZES, ModelOption, ModelPicker, machine_options
 from shells.tray.native import enable_dark_titlebar
 
@@ -401,13 +401,7 @@ class SettingsDialog(QDialog):
         # measured quality gate (scripts/lang_gate.py, >=80% keyword recall
         # on large-v3-turbo) — see design/preview/lang-gate.md.
         self.lang_combo = QComboBox()
-        for label, code in (
-            ("Auto", "auto"), ("Русский", "ru"), ("English", "en"),
-            ("Español", "es"), ("Deutsch", "de"), ("Français", "fr"),
-            ("Italiano", "it"), ("Português", "pt"), ("Polski", "pl"),
-            ("Українська", "uk"), ("Nederlands", "nl"), ("Türkçe", "tr"),
-            ("日本語", "ja"), ("한국어", "ko"), ("中文", "zh"),
-        ):
+        for label, code in LANGUAGES:
             self.lang_combo.addItem(label, code)
         _select_by_data(self.lang_combo, self.config.language)
         self.lang_combo.currentIndexChanged.connect(self._save_general)
@@ -714,6 +708,7 @@ class SettingsDialog(QDialog):
         self.config_changed.emit()
 
     def _save_general(self) -> None:
+        language_changed = self.config.language != self.lang_combo.currentData()
         self.config.language = self.lang_combo.currentData()
         self.config.ui_language = self.ui_lang_combo.currentData()
         self.config.insert_method = self.insert_combo.currentData()
@@ -725,6 +720,9 @@ class SettingsDialog(QDialog):
         self.config.save()
         if device_changed:
             self._restart_monitor()
+        if language_changed:
+            # "English only" swaps the CPU set to the .en builds.
+            self._rebuild_model_picker()
         self.config_changed.emit()
 
     def _save_model(self) -> None:
@@ -834,7 +832,9 @@ class SettingsDialog(QDialog):
     # -- model picker plumbing -------------------------------------------------
 
     def _make_model_picker(self) -> ModelPicker:
-        options, note = machine_options(self.config.bench_results)
+        options, note = machine_options(
+            self.config.bench_results, language=self.config.language
+        )
         if self.config.model_size not in {o.name for o in options}:
             # Hand-picked model outside the recommended trio (e.g. large-v3):
             # show it as a fourth card so the selection stays honest.

@@ -240,6 +240,10 @@ class Engine:
             audio_seconds = 0.0  # filled from model info below
 
         language = None if self.config.language == "auto" else self.config.language
+        if self.config.model_size.endswith(".en"):
+            # English-only builds have an English-only tokenizer; any other
+            # language hint is meaningless and can raise inside the decoder.
+            language = "en"
 
         t0 = time.perf_counter()
         segments_iter, info = self._model.transcribe(
