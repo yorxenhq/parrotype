@@ -367,7 +367,7 @@ class SettingsDialog(QDialog):
     def _stop_monitor(self) -> None:
         if self._monitor is not None:
             try:
-                self._monitor.cancel()
+                self._monitor.close()   # release the device, not just pause
             finally:
                 self._monitor = None
             self.level_meter.reset()

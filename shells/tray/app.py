@@ -133,6 +133,7 @@ class TrayApp(QObject):
         elif self.config.first_run_done:
             # First run defers the preload: the wizard picks the model first.
             self._preload_model()
+        self._prewarm_mic()
 
     # -- tray -------------------------------------------------------------
 
@@ -330,6 +331,21 @@ class TrayApp(QObject):
             self.overlay.hide_pill()
         self._update_status()
 
+    def _prewarm_mic(self) -> None:
+        """Resolve the device and open the warm stream in the background,
+        so even the first dictation starts capturing within milliseconds.
+        Also spins up the COM worker (micguard) ahead of the first press."""
+
+        def worker() -> None:
+            try:
+                self.recorder.device = pick_input_device(self.config.input_device)
+                self.recorder.ensure_open()
+                micguard.default_mic_muted()
+            except Exception:
+                log.exception("Mic prewarm failed (non-fatal)")
+
+        threading.Thread(target=worker, daemon=True).start()
+
     # -- startup self-check -----------------------------------------------------
 
     def _startup_self_check(self) -> None:
@@ -384,16 +400,26 @@ class TrayApp(QObject):
     def _start_recording(self, toggle: bool) -> None:
         if self._recording or self._busy:
             return
+        # Capture FIRST — every millisecond before stream.start() is a
+        # lost phoneme («тестирую» came out as «Костирую» when the mute
+        # check and device enumeration ran ahead of the capture).
+        try:
+            self.recorder.start()
+        except Exception:
+            # Cached device stale (unplug/sleep): re-resolve once, retry.
+            try:
+                self.recorder.device = pick_input_device(self.config.input_device)
+                self.recorder.start()
+            except Exception as exc:
+                log.exception("Recorder start failed")
+                self.overlay.show_error(tr("pill.mic_unavailable", err=exc))
+                return
         if micguard.default_mic_muted():
+            # Checked AFTER start: a muted endpoint records only zeros, so
+            # the head of the take costs nothing.
+            self.recorder.cancel()
             # One-click unmute, but only on the user's explicit click.
             self.overlay.show_error(tr("pill.mic_muted"), action=self._unmute_mic)
-            return
-        try:
-            self.recorder.device = pick_input_device(self.config.input_device)
-            self.recorder.start()
-        except Exception as exc:
-            log.exception("Recorder start failed")
-            self.overlay.show_error(tr("pill.mic_unavailable", err=exc))
             return
         self._recording = True
         self._toggle_mode = toggle
@@ -577,6 +603,7 @@ class TrayApp(QObject):
         if current_language() != previous_language:
             self._retranslate_tray()
         self.hotkeys.bind(self.config.hotkey_ptt, self.config.hotkey_toggle)
+        self._prewarm_mic()   # mic device may have changed; re-warm the stream
         # Model/device change -> full worker restart in the background (a
         # fresh process re-probes the GPU and re-registers DLL paths — the
         # only correct move right after the CUDA runtime install). Anything
@@ -593,7 +620,8 @@ class TrayApp(QObject):
                 target=self.engine.reload_postfilter, daemon=True
             ).start()
         autostart.set_enabled(self.config.autostart)
-        self.recorder.device = self.config.input_device
+        # recorder.device is resolved by _prewarm_mic (vetted real device,
+        # not the raw config value) — no direct assignment here.
         self._update_status()
 
     def _open_log(self) -> None:
@@ -603,8 +631,7 @@ class TrayApp(QObject):
 
     def _quit(self) -> None:
         self.hotkeys.unbind()
-        if self._recording:
-            self.recorder.cancel()
+        self.recorder.close()
         shutdown = getattr(self.engine, "shutdown", None)
         if shutdown is not None:
             shutdown()
