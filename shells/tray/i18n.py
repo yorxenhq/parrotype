@@ -246,16 +246,16 @@ _STRINGS: dict[str, dict[str, str]] = {
         "en": "the lightest one — if disk space is tight",
     },
     "model.desc.cpu.small": {
-        "ru": "лучше всего слышит, чуть дольше думает",
-        "en": "hears best, takes a moment longer",
+        "ru": "слышит лучше всех — за это платишь парой секунд ожидания",
+        "en": "hears best — you pay for it with a couple seconds of waiting",
     },
     "model.desc.cpu.base": {
-        "ru": "золотая середина — быстро и вполне точно",
-        "en": "the middle ground — quick and fairly accurate",
+        "ru": "компромисс: заметно быстрее, слышит чуть хуже",
+        "en": "the trade-off: noticeably faster, hears slightly worse",
     },
     "model.desc.cpu.tiny": {
-        "ru": "самая лёгкая — для слабых машин",
-        "en": "the lightest one — for weaker machines",
+        "ru": "самая быстрая — и слышит хуже всех",
+        "en": "the fastest — and the least accurate",
     },
     "model.desc.other": {
         "ru": "выбрана вручную — вне рекомендованного набора",
