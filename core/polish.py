@@ -1,4 +1,4 @@
-"""LLM polish layer: clean up dictated text locally (the Wispr Flow magic).
+"""LLM polish layer: clean up dictated text locally.
 
 What it does to a raw transcript: removes filler words («эээ», «ну»,
 "um"), resolves self-corrections («в пятницу… нет, лучше в четверг» →

@@ -507,7 +507,7 @@ class SettingsDialog(QDialog):
 
         layout.addSpacing(6)
 
-        # -- polish: the local Wispr-style cleanup layer -----------------
+        # -- polish: the local LLM cleanup layer -------------------------
         self.polish_check = QCheckBox(tr("set.polish_cb"))
         self.polish_check.setChecked(self.config.polish_enabled)
         self.polish_check.toggled.connect(self._on_polish_toggled)
