@@ -61,6 +61,19 @@ nvidia-cuda-nvrtc-cu12 — proprietary NVIDIA redistributables.
 | packaging | Apache-2.0 OR BSD-2-Clause |
 | click, colorama, fsspec, Pygments | BSD |
 
+## Polish layer (added 2026-07-17)
+
+| Package | License |
+|---|---|
+| llama-cpp-python (bundles llama.cpp) | MIT |
+| diskcache | Apache-2.0 |
+| Jinja2 | BSD-3-Clause |
+| MarkupSafe | BSD-3-Clause |
+
+Model weights downloaded at the user's request (never shipped in the
+installer): **Qwen3-1.7B** — Apache-2.0 (Q4_K_M GGUF quantization,
+unsloth mirror of the official weights).
+
 ## Dev-only (not distributed)
 
 pytest (MIT), pip-licenses (MIT), Pillow (MIT-CMU — used once to build the
