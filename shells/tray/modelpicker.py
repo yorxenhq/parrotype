@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QMouseEvent
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 
@@ -118,19 +118,19 @@ class ModelCard(QFrame):
         left.setSpacing(2)
         head = QHBoxLayout()
         head.setSpacing(8)
-        name = QLabel(opt.name)
-        name.setObjectName("modelname")
-        head.addWidget(name)
+        self._name = QLabel(opt.name)
+        self._name.setObjectName("modelname")
+        head.addWidget(self._name)
         if opt.recommended:
             chip = QLabel(tr("model.rec"))
             chip.setObjectName("recchip")
             head.addWidget(chip)
         head.addStretch()
         left.addLayout(head)
-        desc = QLabel(tr(opt.desc_key))
-        desc.setObjectName("muted")
-        desc.setWordWrap(True)
-        left.addWidget(desc)
+        self._desc = QLabel(tr(opt.desc_key))
+        self._desc.setObjectName("muted")
+        self._desc.setWordWrap(True)
+        left.addWidget(self._desc)
         row.addLayout(left, 1)
 
         lines = []
@@ -141,10 +141,34 @@ class ModelCard(QFrame):
             lines.append(tr(key, sec=opt.sec))
         if opt.size_n != "—":
             lines.append(tr(f"model.meta.size_{opt.size_unit}", n=opt.size_n))
-        meta = QLabel("\n".join(lines))
-        meta.setObjectName("modelmeta")
-        meta.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        row.addWidget(meta)
+        self._meta = QLabel("\n".join(lines))
+        self._meta.setObjectName("modelmeta")
+        self._meta.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
+        row.addWidget(self._meta)
+        self._update_min_height()
+
+    def _update_min_height(self) -> None:
+        """Pin the card height from CURRENT font metrics.
+
+        The global QSS (custom fonts, 14px semibold titles) lands after
+        the first layout pass, and word-wrapping labels under-report
+        their height until a resize — cards opened visually squashed
+        («текст наезжает») until the user stretched the window.
+        """
+        text_h = (
+            self._name.fontMetrics().height()
+            + self._desc.fontMetrics().height() + 2      # left column + spacing
+        )
+        meta_h = self._meta.fontMetrics().height() * 2   # right column, 2 lines
+        self.setMinimumHeight(max(text_h, meta_h) + 10 + 10 + 2)  # margins+border
+
+    def changeEvent(self, event) -> None:  # noqa: N802, ANN001
+        # QSS/font application arrives after construction — re-measure.
+        if event.type() in (QEvent.Type.FontChange, QEvent.Type.StyleChange):
+            self._update_min_height()
+        super().changeEvent(event)
 
     def set_selected(self, on: bool) -> None:
         self.setProperty("selected", on)

@@ -275,7 +275,7 @@ class SettingsDialog(QDialog):
         self.config = config
         self.history = history
         self.setWindowTitle(tr("set.title"))
-        self.resize(760, 560)
+        self.resize(760, 620)
 
         self._monitor: Recorder | None = None
 
@@ -451,6 +451,10 @@ class SettingsDialog(QDialog):
         return page
 
     def _build_model_page(self) -> QWidget:
+        # The page grew past the dialog height (polish section): without a
+        # scroll area Qt compresses slots below widget minimums and the
+        # model cards overlap on first open. Scrolling is the safety net
+        # for every language/DPI; at the default size it stays invisible.
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(24, 24, 24, 24)
@@ -530,7 +534,13 @@ class SettingsDialog(QDialog):
         self.latency_label.setObjectName("muted")
         layout.addWidget(self.latency_label)
         layout.addStretch()
-        return page
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setWidget(page)
+        return scroll
 
     def _build_dictionary_page(self) -> QWidget:
         page = QWidget()
