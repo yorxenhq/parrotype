@@ -23,6 +23,11 @@ UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; Brand art (dark panel, parrot mark, mint signature) — rendered by
+; scripts\render_installer_art.py from the canonical SVG + theme colors.
+; Inno picks the variant closest to the display scale.
+WizardImageFile=..\assets\installer\wizard-100.bmp,..\assets\installer\wizard-200.bmp
+WizardSmallImageFile=..\assets\installer\wizard-small-100.bmp,..\assets\installer\wizard-small-200.bmp
 PrivilegesRequired=lowest
 ArchitecturesInstallIn64BitMode=x64compatible
 

@@ -536,6 +536,7 @@ class SettingsDialog(QDialog):
         layout.addStretch()
 
         scroll = QScrollArea()
+        scroll.setObjectName("modelscroll")   # transparent bg (theme QSS)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)

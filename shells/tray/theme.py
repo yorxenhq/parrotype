@@ -178,6 +178,7 @@ def app_qss() -> str:
     QToolButton#histtrash:hover {{ background: {LINE}; }}
     QPushButton#danger {{ color: {REC}; }}
     QScrollArea#histscroll, QScrollArea#histscroll > QWidget > QWidget {{ background: transparent; border: none; }}
+    QScrollArea#modelscroll, QScrollArea#modelscroll > QWidget > QWidget {{ background: transparent; border: none; }}
 
     /* headings: Space Grotesk (owner-approved variant C); body stays Segoe */
     QLabel#steptitle {{ font-family: {FONT_HEADING_CHAIN}; font-size: 18px; font-weight: 700; }}
