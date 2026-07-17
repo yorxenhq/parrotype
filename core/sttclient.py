@@ -120,6 +120,16 @@ class IsolatedEngine:
             self._proc = None
         self._loaded = False
 
+    def abort(self) -> None:
+        """Kill the worker immediately WITHOUT taking the lock.
+
+        Used to supersede an in-flight model load when the user picks a
+        different model: the blocked load request fails fast (its caller
+        checks a generation counter and stays quiet), the lock frees, and
+        the next load starts with the new config. Never blocks the GUI.
+        """
+        self._kill()
+
     def shutdown(self) -> None:
         """Graceful stop (app quit)."""
         with self._lock:

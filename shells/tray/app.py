@@ -114,6 +114,8 @@ class TrayApp(QObject):
         self._user_paused = False        # tray-menu pause
         self._settings_open = False      # hotkeys muted while settings visible
         self._wizard_active = False
+        self._engine_gen = 0             # supersedes stale model (re)loads
+        self._reload_timer: QTimer | None = None
 
         self.settings_dialog: SettingsDialog | None = None
         self._settings_language = current_language()
@@ -231,7 +233,10 @@ class TrayApp(QObject):
 
     # -- model preload -------------------------------------------------------
 
-    def _preload_model(self) -> None:
+    def _preload_model(self, restart: bool = False) -> None:
+        self._engine_gen += 1
+        generation = self._engine_gen
+
         def worker() -> None:
             try:
                 last_pct = {"v": -5}
@@ -242,15 +247,23 @@ class TrayApp(QObject):
                         self.bridge.model_progress.emit(pct)
 
                 with self._engine_lock:
+                    if generation != self._engine_gen:
+                        return          # a newer selection superseded this one
+                    if restart:
+                        self.engine.unload_model()
                     if not self.engine.is_model_cached():
                         self.engine.ensure_model(progress_cb=on_pct)
                     self.engine.load_model()
                     # Throwaway decode: without it the first real dictation
                     # pays the CUDA cold-start and feels sluggish.
                     self.engine.warm_up()
+                if generation != self._engine_gen:
+                    return
                 self.bridge.model_ready.emit()
                 self._maybe_selftest()
             except Exception as exc:
+                if generation != self._engine_gen:
+                    return              # aborted on purpose — stay quiet
                 log.exception("Model preload failed")
                 self.bridge.failed.emit(tr("pill.model_failed", err=exc))
 
@@ -330,6 +343,32 @@ class TrayApp(QObject):
         if self.overlay.state == OverlayState.STATUS:
             self.overlay.hide_pill()
         self._update_status()
+
+    def _schedule_engine_restart(self) -> None:
+        """Coalesce rapid model-card clicks into one worker restart.
+
+        400 ms after the LAST change: abort whatever load is in flight
+        (frees the lock instantly), then preload the final selection in
+        the background. The GUI thread never waits on the engine.
+        """
+        if self._reload_timer is None:
+            self._reload_timer = QTimer(self)
+            self._reload_timer.setSingleShot(True)
+            self._reload_timer.timeout.connect(self._do_engine_restart)
+        self._engine_gen += 1          # supersede in-flight loads right away
+        self._reload_timer.start(400)
+
+    def _do_engine_restart(self) -> None:
+        loaded_key = getattr(self.engine, "loaded_key", None)
+        current_key = (self.config.model_size, *self.config.resolve_device())
+        if loaded_key == current_key and self.engine.model_loaded:
+            self._on_model_ready()     # clicked back to the loaded model
+            return
+        abort = getattr(self.engine, "abort", None)
+        if abort is not None:
+            abort()                    # lock-free kill; stale loads stay quiet
+        self._update_status()
+        self._preload_model(restart=True)
 
     def _prewarm_mic(self) -> None:
         """Resolve the device and open the warm stream in the background,
@@ -611,8 +650,11 @@ class TrayApp(QObject):
         loaded_key = getattr(self.engine, "loaded_key", None)
         current_key = (self.config.model_size, *self.config.resolve_device())
         if loaded_key is not None and current_key != loaded_key:
-            self.engine.unload_model()
-            self._preload_model()
+            # NEVER restart synchronously: unload_model() waits for the
+            # engine lock, which an in-flight load of the PREVIOUS pick may
+            # hold for seconds — that froze the settings dialog when the
+            # user clicked through model cards quickly. Debounce instead.
+            self._schedule_engine_restart()
         else:
             # Off the GUI thread: the worker lock may be held by an
             # in-flight transcription and must not freeze the dialog.
