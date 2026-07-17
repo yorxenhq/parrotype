@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 _CALL_TIMEOUT_S = 3.0
 
-_requests: "queue.Queue[tuple[Callable[[], Any], queue.Queue]]" = queue.Queue()
+_calls: "queue.Queue[tuple[Callable[[], Any], queue.Queue]]" = queue.Queue()
 _thread_started = threading.Lock()
 _thread: threading.Thread | None = None
 
@@ -38,7 +38,7 @@ def _com_loop() -> None:
     comtypes.CoInitialize()
     log.debug("COM worker thread started")
     while True:
-        func, reply = _requests.get()
+        func, reply = _calls.get()
         try:
             result: tuple[bool, Any] = (True, func())
         except Exception as exc:  # reported to the caller, never raised here
@@ -60,7 +60,7 @@ def _run_on_com_thread(func: Callable[[], Any]) -> Any:
             )
             _thread.start()
     reply: queue.Queue = queue.Queue()
-    _requests.put((func, reply))
+    _calls.put((func, reply))
     ok, value = reply.get(timeout=_CALL_TIMEOUT_S)
     if not ok:
         raise value

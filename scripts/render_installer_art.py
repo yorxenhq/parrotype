@@ -33,7 +33,7 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "installer"
 
-BG = QColor("#141419")          # a touch deeper than SURFACE: panel, not window
+BG = QColor("#101014")          # tokens: bg/page — «фон витрин и глубоких поверхностей»
 TEXT = QColor("#ECECF1")
 MUTED = QColor("#9A9AA6")
 ACCENT = QColor("#4FD1B0")
